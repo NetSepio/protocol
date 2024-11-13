@@ -14,11 +14,9 @@ module erebrus::erebrus_registry_v1 {
     // WiFi Node Data
     public struct WifiNode has key, store {
         id: UID,
-        user: address,
         device_id: String,
         ssid: String,
         location: String,
-        price_per_minute: u64,
         is_active: bool
     }
 
@@ -41,13 +39,16 @@ module erebrus::erebrus_registry_v1 {
         current_vpn_node: u64,
         wifi_nodes: Table<u64, WifiNodeInfo>,
         vpn_nodes: Table<u64, VpnNodeInfo>
+
     }
 
     public struct WifiNodeInfo has store  {
         owner: address,
         is_active: bool,
         total_checkpoints: u64,
-        node_checkpoints: Table<u64, String>
+        node_checkpoints: Table<u64, String>,
+        price_per_minute: u64,
+
     }
 
     public struct VpnNodeInfo has store {
@@ -110,11 +111,9 @@ module erebrus::erebrus_registry_v1 {
 
         let wifi_node = WifiNode {
             id: object::new(ctx),
-            user: tx_context::sender(ctx),
             device_id,
             ssid,
             location,
-            price_per_minute,
             is_active: true
         };
 
@@ -122,7 +121,8 @@ module erebrus::erebrus_registry_v1 {
             owner: tx_context::sender(ctx),
             is_active: true,
             total_checkpoints: 0,
-            node_checkpoints: table::new(ctx)
+            node_checkpoints: table::new(ctx),
+            price_per_minute
         };
 
         transfer::transfer(wifi_node, tx_context::sender(ctx));
@@ -174,30 +174,17 @@ module erebrus::erebrus_registry_v1 {
         registry: &mut RegistryState,
         wifi_node: WifiNode,
         node_id: u64,
-        ctx: &TxContext
-    ) {
+    ) {      
+
         let WifiNode { 
             id,
-            user,
             device_id: _,
             ssid: _,
             location: _,
-            price_per_minute: _,
             is_active: _
         } = wifi_node;
 
         assert!(wifi_node_exists(registry, node_id), EInvalidInput);
-        assert!(user == tx_context::sender(ctx), ENotAuthorized);
-
-        let node_info = table::remove(&mut registry.wifi_nodes, node_id);
-        let WifiNodeInfo {
-            owner: _,
-            is_active: _,
-            total_checkpoints: _,
-            node_checkpoints
-        } = node_info;
-
-        table::drop(node_checkpoints);
         object::delete(id);
     }
 
@@ -347,6 +334,6 @@ module erebrus::erebrus_registry_v1 {
         node_id: u64
     ): (u64, address) {
         let node_info = table::borrow(&registry.wifi_nodes, node_id);
-        (node_info.total_checkpoints, node_info.owner)
+        (node_info.price_per_minute, node_info.owner)
     }
 }

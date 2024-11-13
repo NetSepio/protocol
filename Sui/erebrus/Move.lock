@@ -24,3 +24,11 @@ dependencies = [
 compiler-version = "1.37.3"
 edition = "2024.beta"
 flavor = "sui"
+
+[env]
+
+[env.Soumalya]
+chain-id = "0fc07bbe"
+original-published-id = "0xa484db909a841bf58482c04eb61d3a90547ef819ecf2c6f66661529677d48a55"
+latest-published-id = "0xa484db909a841bf58482c04eb61d3a90547ef819ecf2c6f66661529677d48a55"
+published-version = "1"
