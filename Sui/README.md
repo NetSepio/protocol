@@ -465,6 +465,276 @@ Erebrus Registry allows WiFi and VPN node operators to:
 
 The system provides transparency and security through blockchain technology while keeping node management simple and efficient.
 
+# Erebrus V1
+
+# Erebrus V1 Smart Contract Documentation
+
+## Overview
+
+Erebrus V1 is a decentralized WiFi and VPN marketplace built on the Sui blockchain. The smart contract manages NFT minting, WiFi connection requests, payments, and user fund management. It leverages Sui's unique object-centric model and Move's strong safety guarantees.
+
+## Core Features
+
+1. NFT Minting System
+2. WiFi Connection Management
+3. Payment Processing
+4. User Fund Management
+5. Admin Controls
+
+## Sui Integration Highlights
+
+The contract leverages several key Sui features:
+
+### Object Management
+
+- Uses Sui's `UID` for unique object identification
+- Implements `key` and `store` abilities for proper object handling
+- Utilizes Sui's object-centric model for NFTs and state management
+
+### Native Token Integration
+
+- Integrates with Sui's native token (SUI) for payments
+- Uses `Coin<SUI>` for handling transactions
+- Leverages `Balance` type for secure fund management
+
+### Event System
+
+- Utilizes Sui's event system for tracking important state changes
+- Emits structured events for external monitoring
+
+## Function Documentation
+
+### NFT Management
+
+### `mint`
+
+Mints a new Erebrus NFT.
+
+```
+public entry fun mint(
+    state: &mut State,
+    payment: Coin<SUI>,
+    name: String,
+    description: String,
+    uri: String,
+    ctx: &mut TxContext
+)
+
+```
+
+**Example:**
+
+```
+mint(
+    state,
+    payment_coin,
+    "Erebrus Premium",
+    "Access to premium network",
+    "<https://erebrus.io/nft/1>",
+    ctx
+);
+
+```
+
+**Sui Features Used:**
+
+- Object creation with `object::new`
+- Coin handling with `Coin<SUI>`
+- Event emission with `event::emit`
+
+### WiFi Connection Management
+
+### `request_wifi_connection`
+
+Creates a new WiFi connection request.
+
+```
+public entry fun request_wifi_connection(
+    state: &mut State,
+    node_id: u64,
+    ctx: &mut TxContext
+)
+
+```
+
+**Example:**
+
+```
+request_wifi_connection(
+    state,
+    1, // node_id
+    ctx
+);
+
+```
+
+### `manage_wifi_request`
+
+Admin function to approve or deny WiFi connection requests.
+
+```
+public entry fun manage_wifi_request(
+    _: &AdminCap,
+    state: &mut State,
+    intent_requester: address,
+    status: bool
+)
+
+```
+
+**Example:**
+
+```
+manage_wifi_request(
+    admin_cap,
+    state,
+    user_address,
+    true // approve request
+);
+
+```
+
+### Payment Processing
+
+### `settle_wifi_payment`
+
+Processes payment for WiFi usage.
+
+```
+public entry fun settle_wifi_payment(
+    state: &mut State,
+    registry: &RegistryState,
+    payment: Coin<SUI>,
+    duration: u64,
+    ctx: &mut TxContext
+)
+
+```
+
+**Example:**
+
+```
+settle_wifi_payment(
+    state,
+    registry,
+    payment_coin,
+    60, // 60 minutes
+    ctx
+);
+
+```
+
+**Sui Features Used:**
+
+- Cross-module calls with registry
+- Sui coin transfers
+- Event emission for payment tracking
+
+### Fund Management
+
+### `add_funds`
+
+Adds funds to user's balance.
+
+```
+public entry fun add_funds(
+    state: &mut State,
+    payment: Coin<SUI>,
+    ctx: &mut TxContext
+)
+
+```
+
+**Example:**
+
+```
+add_funds(
+    state,
+    coin_payment,
+    ctx
+);
+
+```
+
+**Sui Features Used:**
+
+- Balance management with `Balance<SUI>`
+- Table storage for user funds
+- Event emission for fund tracking
+
+### Administrative Functions
+
+### `pause_mint` and `unpause_mint`
+
+Controls NFT minting availability.
+
+```
+public entry fun pause_mint(_: &AdminCap, state: &mut State)
+public entry fun unpause_mint(_: &AdminCap, state: &mut State)
+
+```
+
+## State Management
+
+The contract maintains state through two main structures:
+
+### `State`
+
+```
+struct State has key {
+    id: UID,
+    public_sale_price: u64,
+    subscription_per_month: u64,
+    mint_paused: bool,
+    user_funds: Table<address, Balance<SUI>>,
+    wifi_requests: Table<address, WifiRequest>
+}
+
+```
+
+### `ErebrusNFT`
+
+```
+struct ErebrusNFT has key, store {
+    id: UID,
+    name: String,
+    description: String,
+    url: Url,
+    refund: bool
+}
+
+```
+
+## Events
+
+The contract emits the following events:
+
+1. `NFTMintedEvent`: When a new NFT is minted
+2. `WifiRequestCreated`: When a user requests WiFi connection
+3. `WifiRequestManaged`: When an admin manages a request
+4. `WifiPaymentSettled`: When a payment is processed
+5. `FundsAdded`: When a user adds funds
+
+## Error Codes
+
+- `ENFTMintingPaused (1)`: NFT minting is currently paused
+- `EInsufficientAmount (2)`: Insufficient payment amount
+- `EConnectionNotAccepted (5)`: WiFi connection request not accepted
+1. **Access Control**
+    - Admin capabilities for sensitive operations
+    - User ownership verification for payments
+    - Request acceptance validation
+2. **Fund Safety**
+    - Balance type for secure fund management
+    - Payment amount verification
+    - Safe coin transfers
+3. **State Management**
+    - State mutations through controlled functions
+    - Request state tracking
+    - Proper object cleanup
+
+##
+
 ## Contributing
 
 Contributions welcome! Please:
