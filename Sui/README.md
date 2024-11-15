@@ -232,6 +232,9 @@ Contributions welcome! Please:
 2. Create a feature branch
 3. Submit a pull request
 
+
+## Deployed Contract Address :https://suiscan.xyz/devnet/object/0xa484db909a841bf58482c04eb61d3a90547ef819ecf2c6f66661529677d48a55/contracts
+
 ## License
 
 MIT License
