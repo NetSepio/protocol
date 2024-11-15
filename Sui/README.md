@@ -121,6 +121,247 @@ public struct WifiNodeInfo has store {
 }
 
 ```
+## Function Documentation
+
+### Administrative Functions
+
+### `init`
+
+Initializes the registry and creates the admin capability.
+
+```
+fun init(ctx: &mut TxContext)
+
+```
+
+- Creates initial registry state
+- Transfers admin capability to the contract deployer
+- Sets up empty tables for WiFi and VPN nodes
+
+### WiFi Node Management
+
+### `register_wifi_node`
+
+Registers a new WiFi node in the network.
+
+```
+public entry fun register_wifi_node(
+    registry: &mut RegistryState,
+    device_id: String,
+    ssid: String,
+    location: String,
+    price_per_minute: u64,
+    ctx: &mut TxContext
+)
+
+```
+
+**Example:**
+
+```
+register_wifi_node(
+    registry,
+    "device123",
+    "Erebrus-WiFi",
+    "New York, USA",
+    5, // 5 tokens per minute
+    ctx
+);
+
+```
+
+**Analogy:** Think of this like registering a new hotel in a hotel chain's system, where you provide essential details like location, room rates, and property information.
+
+### `wifi_device_checkpoint`
+
+Records a checkpoint for WiFi device activity.
+
+```
+public entry fun wifi_device_checkpoint(
+    registry: &mut RegistryState,
+    node_id: u64,
+    data_hash: String,
+    ctx: &TxContext
+)
+
+```
+
+**Example:**
+
+```
+wifi_device_checkpoint(
+    registry,
+    1, // node_id
+    "0x123...abc", // hash of activity data
+    ctx
+);
+
+```
+
+**Analogy:** Similar to a security guard logging their rounds at different checkpoints throughout their shift.
+
+### `deactivate_wifi_node`
+
+Allows admin to deactivate a WiFi node.
+
+```
+public entry fun deactivate_wifi_node(
+    _: &AdminCap,
+    registry: &mut RegistryState,
+    node_id: u64
+)
+
+```
+
+**Example:**
+
+```
+deactivate_wifi_node(admin_cap, registry, 1);
+
+```
+
+**Analogy:** Like temporarily closing a store location in a retail chain.
+
+### VPN Node Management
+
+### `register_vpn_node`
+
+Registers a new VPN node in the network.
+
+```
+public entry fun register_vpn_node(
+    registry: &mut RegistryState,
+    node_name: String,
+    ip_address: String,
+    isp_info: String,
+    region: String,
+    location: String,
+    ctx: &mut TxContext
+)
+
+```
+
+**Example:**
+
+```
+register_vpn_node(
+    registry,
+    "vpn-node-1",
+    "192.168.1.1",
+    "Comcast",
+    "NA-East",
+    "Boston, USA",
+    ctx
+);
+
+```
+
+**Analogy:** Similar to registering a new server in a data center, providing all necessary connection and location details.
+
+### `vpn_device_checkpoint`
+
+Records a checkpoint for VPN node activity.
+
+```
+public entry fun vpn_device_checkpoint(
+    registry: &mut RegistryState,
+    node_id: u64,
+    data_hash: String,
+    ctx: &TxContext
+)
+
+```
+
+**Example:**
+
+```
+vpn_device_checkpoint(
+    registry,
+    1,
+    "0x456...def",
+    ctx
+);
+
+```
+
+**Analogy:** Like a server health check that logs its status at regular intervals.
+
+### `update_vpn_node`
+
+Updates VPN node status and region information.
+
+```
+public entry fun update_vpn_node(
+    registry: &mut RegistryState,
+    node: &mut VpnNode,
+    node_id: u64,
+    status: u8,
+    region: String,
+    ctx: &TxContext
+)
+
+```
+
+**Example:**
+
+```
+update_vpn_node(
+    registry,
+    vpn_node,
+    1,
+    2, // new status
+    "EU-West",
+    ctx
+);
+
+```
+
+**Analogy:** Similar to updating a delivery driver's status and location in a ride-sharing app.
+
+### Utility Functions
+
+### `wifi_node_exists`
+
+Checks if a WiFi node exists in the registry.
+
+```
+public fun wifi_node_exists(registry: &RegistryState, node_id: u64): bool
+
+```
+
+### `vpn_node_exists`
+
+Checks if a VPN node exists in the registry.
+
+```
+public fun vpn_node_exists(registry: &RegistryState, node_id: u64): bool
+
+```
+
+### `get_wifi_details`
+
+Retrieves pricing and owner information for a WiFi node.
+
+```
+public fun get_wifi_details(registry: &RegistryState, node_id: u64): (u64, address)
+
+```
+
+## Error Codes
+
+- `ENotAuthorized (1)`: User doesn't have permission for the operation
+- `ENodeNotActive (2)`: Node is not in active state
+- `EInvalidInput (3)`: Invalid input parameters provided
+
+## Events
+
+The contract emits the following events:
+
+- `VpnNodeRegisteredEvent`: When a new VPN node is registered
+- `WifiNodeRegisteredEvent`: When a new WiFi node is registered
+- `VpnNodeUpdatedEvent`: When a VPN node's status or region is updated
+
+
 
 ## Key Features
 
