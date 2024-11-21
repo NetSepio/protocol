@@ -222,4 +222,21 @@ module erebrus::erebrus_v1 {
         object::delete(id);
     }
 
+    // Add these new functions to control minting status
+    public entry fun pause_mint(
+        _: &AdminCap,
+        state: &mut State,
+    ) {
+        state.mint_paused = true;
+    }
+
+    public entry fun unpause_mint(
+        _: &AdminCap,
+        state: &mut State,
+    ) {
+        state.mint_paused = false;
+    }
+
+
+
 }

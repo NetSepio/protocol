@@ -29,6 +29,6 @@ flavor = "sui"
 
 [env.Soumalya]
 chain-id = "0fc07bbe"
-original-published-id = "0xa484db909a841bf58482c04eb61d3a90547ef819ecf2c6f66661529677d48a55"
-latest-published-id = "0xa484db909a841bf58482c04eb61d3a90547ef819ecf2c6f66661529677d48a55"
+original-published-id = "0xbb0eeda790765539c56e28a828a706ef3fe6ad2ee63b2ec71f7ba73f5c745640"
+latest-published-id = "0xbb0eeda790765539c56e28a828a706ef3fe6ad2ee63b2ec71f7ba73f5c745640"
 published-version = "1"
