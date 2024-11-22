@@ -11,7 +11,7 @@ erebrus_nft = "DKeCpFVnH6mmV34qeTWtoQr8gxGGzGaLBaTrZp7DmWVj"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "https://rpc.devnet.soo.network/rpc"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
