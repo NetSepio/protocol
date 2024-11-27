@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("7XDE596AKuHKBkp333WqhSYu9u4rLrAkYThWtQJCw5La");
+declare_id!("3ypCkXQWiAFkNk7bo8bnZFxUVmVEWCqpBoY7v4vgPnHJ");
 
 #[program]
 pub mod erebrus_registry {
