@@ -64,7 +64,7 @@ Test cases should validate:
 
 ## **Program IDs**
 
-- Program ID: `Bhvt1zhb14KRwXyan3cMZ52qwyyJP7Cji5HJrQrdmkAk`
+- Program ID: `7XDE596AKuHKBkp333WqhSYu9u4rLrAkYThWtQJCw5La`
 - Devnet deployment: [Explorer Link]
 
 ## **Common Commands**
@@ -294,4 +294,4 @@ The code follows Anchor's best practices for account validation, PDA derivation,
 
 # Deployment Link
 
-[https://explorer.devnet.soo.network/tx/46fNVC9WFL4B6myDxs4rLGDvmzvxmjhemzFZzkjD7L5aXxDZngocVMv4RKW1JNYQpQ9TafALwnjYsS2BqVBrMBAf](https://explorer.devnet.soo.network/tx/46fNVC9WFL4B6myDxs4rLGDvmzvxmjhemzFZzkjD7L5aXxDZngocVMv4RKW1JNYQpQ9TafALwnjYsS2BqVBrMBAf)
+[https://explorer.devnet.soo.network/address/7XDE596AKuHKBkp333WqhSYu9u4rLrAkYThWtQJCw5La](https://explorer.devnet.soo.network/address/7XDE596AKuHKBkp333WqhSYu9u4rLrAkYThWtQJCw5La)
