@@ -294,4 +294,4 @@ The code follows Anchor's best practices for account validation, PDA derivation,
 
 # Deployment Link
 
-[https://explorer.devnet.soo.network/address/7XDE596AKuHKBkp333WqhSYu9u4rLrAkYThWtQJCw5La](https://explorer.devnet.soo.network/address/7XDE596AKuHKBkp333WqhSYu9u4rLrAkYThWtQJCw5La)
+[https://explorer.devnet.soo.network/address/3ypCkXQWiAFkNk7bo8bnZFxUVmVEWCqpBoY7v4vgPnHJ](https://explorer.devnet.soo.network/address/3ypCkXQWiAFkNk7bo8bnZFxUVmVEWCqpBoY7v4vgPnHJ)
