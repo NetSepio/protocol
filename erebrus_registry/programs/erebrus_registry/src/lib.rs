@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-declare_id!("Bhvt1zhb14KRwXyan3cMZ52qwyyJP7Cji5HJrQrdmkAk");
+declare_id!("3ypCkXQWiAFkNk7bo8bnZFxUVmVEWCqpBoY7v4vgPnHJ");
 
 #[program]
 pub mod erebrus_registry {
@@ -46,7 +46,6 @@ pub mod erebrus_registry {
     pub fn register_vpn_node(
         ctx: Context<RegisterVpnNode>,
         user_node_num: u64,
-        peaq_did: String,
         nodename: String,
         ipaddress: String,
         ispinfo: String,
@@ -55,7 +54,6 @@ pub mod erebrus_registry {
     ) -> Result<()> {
         let vpn_node = &mut ctx.accounts.vpn_node;
         vpn_node.user = ctx.accounts.user.key();
-        vpn_node.peaq_did = peaq_did;
         vpn_node.nodename = nodename;
         vpn_node.ipaddress = ipaddress;
         vpn_node.ispinfo = ispinfo;
@@ -297,8 +295,6 @@ pub struct WifiNode {
     #[max_len(50)]
     pub device_id: String,
     #[max_len(50)]
-    pub peaq_did: String,
-    #[max_len(50)]
     pub ssid: String,
     #[max_len(100)]
     pub location: String,
@@ -312,8 +308,6 @@ pub struct WifiNode {
 pub struct VpnNode {
     pub node_id: u64,
     pub user: Pubkey,
-    #[max_len(50)]
-    pub peaq_did: String,
     #[max_len(50)]
     pub nodename: String,
     #[max_len(50)]

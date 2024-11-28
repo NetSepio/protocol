@@ -139,7 +139,6 @@ pub struct WifiNode {
     pub node_id: u64,
     pub user: Pubkey,
     pub device_id: String,
-    pub peaq_did: String,
     pub ssid: String,
     pub location: String,
     pub price_per_minute: u64,
@@ -151,7 +150,6 @@ pub struct WifiNode {
 pub struct VpnNode {
     pub node_id: u64,
     pub user: Pubkey,
-    pub peaq_did: String,
     pub nodename: String,
     pub ipaddress: String,
     pub ispinfo: String,
@@ -193,7 +191,6 @@ pub fn register_wifi_node(
 pub fn register_vpn_node(
     ctx: Context<RegisterVpnNode>,
     user_node_num: u64,
-    peaq_did: String,
     nodename: String,
     ipaddress: String,
     ispinfo: String,
