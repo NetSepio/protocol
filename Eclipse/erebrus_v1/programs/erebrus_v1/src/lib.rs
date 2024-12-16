@@ -2,14 +2,13 @@ use anchor_lang::prelude::*;
 
 declare_id!("Cn9JANYGJkxd6x86RZ4Mtsray6Z1svvfB12rjy1C2PDw");
 
-
 pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 
 #[program]
 pub mod erebrus_v1 {
     use super::*;
 
-    /// Registers a new node in the network with provided details and sets initial status to active (1)
+    /// Registers a new node in the network with provided details and sets initial status to active (1) ///
     pub fn register_node(
         ctx: Context<RegisterNode>,
         id: String,
@@ -20,7 +19,7 @@ pub mod erebrus_v1 {
         region: String,
         location: String,
         metadata: String,
-        owner: String,
+        owner: Pubkey,
     ) -> Result<()> {
         let node = &mut ctx.accounts.node;
         node.user = ctx.accounts.user.key();
@@ -33,48 +32,52 @@ pub mod erebrus_v1 {
         node.location = location;
         node.metadata = metadata;
         node.owner = owner;
-        node.status = 1; // Always 1 for active status
+        node.status = 1; // Always 1 for active status///
 
+        // emit config , metadata
         emit!(NodeRegistered {
             id: node.id.clone(),
             name: node.name.clone(),
             node_type: node.node_type.clone(),
+            config: node.config.clone(),
             ipaddress: node.ipaddress.clone(),
             region: node.region.clone(),
             location: node.location.clone(),
-            owner: node.owner.clone()
+            metadata: node.metadata.clone(),
+            owner: node.owner.to_string()
         });
 
         Ok(())
     }
 
-    /// Deactivates a node by closing its PDA and returning the lamports to the user
-    pub fn deactivate_node(ctx: Context<DeactivateNode>) -> Result<()> {
+    /// Deactivates a node by closing its PDA and returning the lamports to the user///
+    pub fn deactivate_node(ctx: Context<DeactivateNode>, node_id: String) -> Result<()> {
         let node = &ctx.accounts.node;
 
         emit!(NodeDeactivated {
-            id: node.id.clone(),
-            operator_address: ctx.accounts.user.key(),
-            timestamp: Clock::get()?.unix_timestamp
+            id: node_id,
+            owner_address: node.owner,
         });
 
         Ok(())
     }
 
-    /// Updates node status to either offline (0), online (1), or maintenance (2)
-    pub fn update_node_status(ctx: Context<UpdateNode>, new_status: u8) -> Result<()> {
+    // / Updates node status to either offline (0), online (1), or maintenance (2)///
+    pub fn update_node_status(
+        ctx: Context<UpdateNode>,
+        node_id: String,
+        new_status: u8,
+    ) -> Result<()> {
         let node = &mut ctx.accounts.node;
-        node.status = new_status; // 0: Offline, 1: Online, 2: Maintenance
-
+        node.status = new_status; // 0: Offline, 1: Online, 2: Maintenance///
         emit!(NodeStatusUpdated {
-            id: node.id.clone(),
+            id: node_id,
             new_status,
-            operator_address: ctx.accounts.user.key()
         });
 
         Ok(())
     }
-    
+
     /// Creates a checkpoint for a node with provided data and emits timestamp in event
     pub fn create_checkpoint(
         ctx: Context<CreateCheckpoint>,
@@ -88,7 +91,6 @@ pub mod erebrus_v1 {
         emit!(CheckpointCreated {
             node_id: checkpoint.node_id.clone(),
             data: checkpoint.data.clone(),
-            timestamp: Clock::get()?.unix_timestamp
         });
 
         Ok(())
@@ -102,7 +104,7 @@ pub struct RegisterNode<'info> {
         init,
         payer = user,
         space = ANCHOR_DISCRIMINATOR_SIZE + Node::INIT_SPACE,
-        seeds = [b"node", user.key().as_ref(), id.as_bytes()],
+        seeds = [b"erebrus", user.key().as_ref(), id.as_bytes()],  
         bump
     )]
     pub node: Account<'info, Node>,
@@ -112,13 +114,13 @@ pub struct RegisterNode<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(node_id: String)]
 pub struct DeactivateNode<'info> {
     #[account(
         mut,
         close = user,
-        seeds = [b"node", user.key().as_ref(), node.id.as_bytes()],
+        seeds = [b"erebrus", user.key().as_ref(), node_id.as_bytes()],
         bump,
-        has_one = user
     )]
     pub node: Account<'info, Node>,
     #[account(mut)]
@@ -127,13 +129,17 @@ pub struct DeactivateNode<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(node_id: String)]
 pub struct UpdateNode<'info> {
     #[account(
         mut,
-        has_one = user
+        seeds = [b"erebrus", user.key().as_ref(), node_id.as_bytes()],
+        bump
     )]
     pub node: Account<'info, Node>,
+    #[account(mut)]
     pub user: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -170,14 +176,14 @@ pub struct Node {
     #[max_len(200)]
     pub metadata: String,
     #[max_len(50)]
-    pub owner: String,
-    pub status: u8, // 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated
+    pub owner: Pubkey,
+    pub status: u8, // 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated ///
 }
 
 #[account]
 #[derive(InitSpace)]
 pub struct Checkpoint {
-    #[max_len(50)]
+    #[max_len(500)]
     pub node_id: String,
     #[max_len(1000)]
     pub data: String,
@@ -188,30 +194,29 @@ pub struct NodeRegistered {
     pub id: String,
     pub name: String,
     pub node_type: String,
+    pub config: String,
     pub ipaddress: String,
     pub region: String,
     pub location: String,
+    pub metadata: String,
     pub owner: String,
 }
 
+// Update the event struct
 #[event]
 pub struct NodeDeactivated {
     pub id: String,
-    pub operator_address: Pubkey,
-    pub timestamp: i64,
+    pub owner_address: Pubkey, // Changed from operator_address to match usage ///
 }
 
 #[event]
 pub struct NodeStatusUpdated {
     pub id: String,
     pub new_status: u8,
-    pub operator_address: Pubkey,
 }
 
 #[event]
 pub struct CheckpointCreated {
     pub node_id: String,
     pub data: String,
-    pub timestamp: i64,
 }
-
