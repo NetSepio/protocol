@@ -8,7 +8,7 @@ pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 pub mod erebrus_v1 {
     use super::*;
 
-    /// Registers a new node in the network with provided details and sets initial status to active (1) ///
+    // Registers a new node in the network with provided details and sets initial status to active (1)
     pub fn register_node(
         ctx: Context<RegisterNode>,
         id: String,
@@ -32,9 +32,9 @@ pub mod erebrus_v1 {
         node.location = location;
         node.metadata = metadata;
         node.owner = owner;
-        node.status = 1; // Always 1 for active status///
+        node.status = 1;    // Defaults to 1 for active status
 
-        // emit config , metadata
+        // emit config, metadata
         emit!(NodeRegistered {
             id: node.id.clone(),
             name: node.name.clone(),
@@ -50,7 +50,7 @@ pub mod erebrus_v1 {
         Ok(())
     }
 
-    /// Deactivates a node by closing its PDA and returning the lamports to the user///
+    // Deactivates a node by closing its PDA and returning the lamports to the user //
     pub fn deactivate_node(ctx: Context<DeactivateNode>, node_id: String) -> Result<()> {
         let node = &ctx.accounts.node;
 
@@ -62,14 +62,14 @@ pub mod erebrus_v1 {
         Ok(())
     }
 
-    // / Updates node status to either offline (0), online (1), or maintenance (2)///
+    // Updates node status to either offline (0), online (1), or maintenance (2)
     pub fn update_node_status(
         ctx: Context<UpdateNode>,
         node_id: String,
         new_status: u8,
     ) -> Result<()> {
         let node = &mut ctx.accounts.node;
-        node.status = new_status; // 0: Offline, 1: Online, 2: Maintenance///
+        node.status = new_status;   // 0: Offline, 1: Online, 2: Maintenance //
         emit!(NodeStatusUpdated {
             id: node_id,
             new_status,
@@ -78,7 +78,7 @@ pub mod erebrus_v1 {
         Ok(())
     }
 
-    /// Creates a checkpoint for a node with provided data and emits timestamp in event
+    // Creates a checkpoint for a node with provided data and emits timestamp in event
     pub fn create_checkpoint(
         ctx: Context<CreateCheckpoint>,
         node_id: String,
@@ -177,7 +177,7 @@ pub struct Node {
     pub metadata: String,
     #[max_len(50)]
     pub owner: Pubkey,
-    pub status: u8, // 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated ///
+    pub status: u8,         // 0: Offline, 1: Online, 2: Maintenance
 }
 
 #[account]
@@ -206,7 +206,7 @@ pub struct NodeRegistered {
 #[event]
 pub struct NodeDeactivated {
     pub id: String,
-    pub owner_address: Pubkey, // Changed from operator_address to match usage ///
+    pub owner_address: Pubkey, // Changed from operator_address to match usage
 }
 
 #[event]

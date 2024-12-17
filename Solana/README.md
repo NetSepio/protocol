@@ -1,4 +1,6 @@
-# ErebrusV1
+# solana
+
+Deployment on solana network
 
 ## Erebrus Registry Program
 
@@ -441,12 +443,12 @@ await program.methods.closeWifiNode(userNodeNum);
 
 ## Program Errors
 
-| Error | Description | Resolution |
-| --- | --- | --- |
-| NodeNotActive | Operation on inactive node | Verify node status |
-| NodeStillActive | Attempting to close active node | Deactivate first |
-| NodeNotCloseable | Closing without permission | Check can_close flag |
-| Unauthorized | Invalid authority or owner | Verify caller identity |
+|       Error         |            Description          |     Resolution          |
+|       -----         |            -----------          |     ----------          |
+|   NodeNotActive     | Operation on inactive node      | Verify node status      |
+|   NodeStillActive   | Attempting to close active node | Deactivate first        |
+|   NodeNotCloseable  | Closing without permission      | Check can_close flag    |
+|   Unauthorized      | Invalid authority or owner      | Verify caller identity  |
 
 ## Example Deployment
 
