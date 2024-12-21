@@ -5,13 +5,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-erebrus_v1 = "BbrLieEbnzqfa6JU4hWFZEx5v5uN9ku84QFVkUHJo9P2"
+erebrus = "6qnn1UZoy688fpTNqdkhiEogHFbqephGRNGy8nz3zY5o"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "https://api.mainnet-beta.solana.com"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

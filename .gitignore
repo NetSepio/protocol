@@ -11,3 +11,7 @@ Move.lock
 build
 
 .env
+
+
+.anchor
+target

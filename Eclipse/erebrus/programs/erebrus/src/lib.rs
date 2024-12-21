@@ -1,11 +1,11 @@
 use anchor_lang::prelude::*;
 
-declare_id!("BbrLieEbnzqfa6JU4hWFZEx5v5uN9ku84QFVkUHJo9P2"); 
+declare_id!("E67ritmxgYPVP9SbcXp5KQx2s5zrx3JzKPg6bzqgkcEZ");
 
 pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 
 #[program]
-pub mod erebrus_v1 {
+pub mod erebrus {
     use super::*;
 
     // Registers a new node in the network with provided details and sets initial status to active (1)
