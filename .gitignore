@@ -12,6 +12,5 @@ build
 
 .env
 
-
-.anchor
-target
+artifacts
+cache   

@@ -2,10 +2,11 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
 /// @title ErebrusV1
-/// @notice Smart contract for managing nodes in the Erebrus network with admin control
-contract ErebrusV1 is AccessControl {
+/// @notice Smart contract for managing nodes in the Erebrus network with admin and operator control
+contract ErebrusV1 is Context, AccessControl {
     /// Status codes for nodes
     /// @dev 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated
     enum Status {
@@ -17,6 +18,7 @@ contract ErebrusV1 is AccessControl {
 
     /// Role definition for admin
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /// @notice Structure to store node information
     struct Node {
@@ -29,7 +31,7 @@ contract ErebrusV1 is AccessControl {
         string region;
         string location;
         string metadata;
-        string owner;
+        address owner;
         Status status;
         bool exists;
     }
@@ -38,36 +40,39 @@ contract ErebrusV1 is AccessControl {
     mapping(string => Node) public nodes;
 
     /// @notice Structure to store checkpoint data
-    mapping(string => string) public Checkpoint;
+    mapping(string => string) public checkpoint;
 
-    /// @notice Array to store all node IDs
+    /// TODO: remove this
     string[] public nodeIds;
 
     /// @notice Events for different node operations
+    // Modified added config, metadata
     event NodeRegistered(
         string id,
         string name,
         string nodeType,
+        string config,
         string ipAddress,
         string region,
         string location,
-        string owner
+        string metadata,
+        address owner
     );
 
-    event NodeDeactivated(string id, address operator, uint256 timestamp);
+    event NodeStatusUpdated(string id, Status newStatus);
 
-    event NodeStatusUpdated(string id, Status newStatus, address operator);
-
-    event CheckpointCreated(string nodeId, string data, uint256 timestamp);
+    event CheckpointCreated(string nodeId, string data);
 
     /// @notice Contract constructor that sets up admin role
     constructor() {
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(ADMIN_ROLE, msg.sender);
+        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(OPERATOR_ROLE, ADMIN_ROLE);
+        _grantRole(ADMIN_ROLE, _msgSender());
+        _grantRole(OPERATOR_ROLE, _msgSender());
     }
 
     /// @notice Registers a new node in the network
-    /// @dev Only admin can register new nodes
+    /// @dev Only operator can register new nodes
     function registerNode(
         string memory id,
         string memory name,
@@ -77,13 +82,13 @@ contract ErebrusV1 is AccessControl {
         string memory region,
         string memory location,
         string memory metadata,
-        string memory owner
-    ) external onlyRole(ADMIN_ROLE) {
-        require(!nodes[id].exists, "Node already exists");
+        address _owner
+    ) external onlyRole(OPERATOR_ROLE) {
+        require(!nodes[id].exists, "Node already exists!");
 
         nodes[id] = Node({
             id: id,
-            user: msg.sender,
+            user: _msgSender(),
             name: name,
             nodeType: nodeType,
             config: config,
@@ -91,7 +96,7 @@ contract ErebrusV1 is AccessControl {
             region: region,
             location: location,
             metadata: metadata,
-            owner: owner,
+            owner: _owner,
             status: Status.Online,
             exists: true
         });
@@ -102,77 +107,45 @@ contract ErebrusV1 is AccessControl {
             id,
             name,
             nodeType,
+            config,
             ipAddress,
             region,
             location,
-            owner
+            metadata,
+            _owner
         );
-    }
-
-    /// @notice Deactivates an existing node
-    /// @dev Only admin can deactivate nodes
-    function deactivateNode(string memory id) external onlyRole(ADMIN_ROLE) {
-        require(nodes[id].exists, "Node does not exist");
-
-        nodes[id].status = Status.Deactivated;
-
-        emit NodeDeactivated(id, msg.sender, block.timestamp);
     }
 
     /// @notice Updates the status of an existing node
-    /// @dev Only admin can update node status
+    /// @dev Only operator can update node status
     function updateNodeStatus(
         string memory id,
         Status newStatus
-    ) external onlyRole(ADMIN_ROLE) {
-        require(nodes[id].exists, "Node does not exist");
-        require(
-            newStatus != Status.Deactivated,
-            "Use deactivateNode for deactivation"
-        );
+    ) external onlyRole(OPERATOR_ROLE) {
+        require(nodes[id].exists, "Erebrus: Node does not exist");
 
         nodes[id].status = newStatus;
 
-        emit NodeStatusUpdated(id, newStatus, msg.sender);
+        emit NodeStatusUpdated(id, newStatus);
     }
 
     /// @notice Creates a checkpoint for a node
-    /// @dev Only admin can create checkpoints
+    /// @dev Only operator can create checkpoints
     function createCheckpoint(
         string memory nodeId,
         string memory data
-    ) external onlyRole(ADMIN_ROLE) {
-        require(nodes[nodeId].exists, "Node does not exist");
+    ) external onlyRole(OPERATOR_ROLE) {
+        require(nodes[nodeId].exists, "Erebrus: Node does not exist");
 
         checkpoint[nodeId] = data;
 
-        emit CheckpointCreated(nodeId, data, block.timestamp);
-    }
-
-    /// @notice Gets all registered nodes
-    /// @return Array of all Node structs
-    function getAllNodes() external view returns (Node[] memory) {
-        Node[] memory allNodes = new Node[](nodeIds.length);
-
-        for (uint i = 0; i < nodeIds.length; i++) {
-            allNodes[i] = nodes[nodeIds[i]];
-        }
-
-        return allNodes;
-    }
-
-    /// @notice Gets a specific node by ID
-    /// @return Node struct for the requested ID
-    function getNode(string memory id) external view returns (Node memory) {
-        require(nodes[id].exists, "Node does not exist");
-        return nodes[id];
+        emit CheckpointCreated(nodeId, data);
     }
 
     // The following functions are overrides required by Solidity.
-
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC721, AccessControl) returns (bool) {
+    ) public view override(AccessControl) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
