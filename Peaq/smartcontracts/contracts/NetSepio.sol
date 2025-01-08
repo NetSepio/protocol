@@ -1,12 +1,12 @@
-// SPDX-License-Identifier: MIT
+S// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
-/// @title Netsepio
-/// @notice Smart contract for managing nodes in the Netsepio network with admin and operator control
-contract Netsepio is Context, AccessControl {
+/// @title NetSepio
+/// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
+contract NetSepioV1 is Context, AccessControl {
     /// Status codes for nodes
     /// @dev 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated
     enum Status {
@@ -117,7 +117,7 @@ contract Netsepio is Context, AccessControl {
         string memory id,
         Status newStatus
     ) external onlyRole(OPERATOR_ROLE) {
-        require(nodes[id].exists, "Netsepio: Node does not exist");
+        require(nodes[id].exists, "NetSepio: Node does not exist");
 
         nodes[id].status = newStatus;
 
@@ -133,9 +133,9 @@ contract Netsepio is Context, AccessControl {
         require(
             _msgSender() == nodes[nodeId].owner ||
                 hasRole(OPERATOR_ROLE, _msgSender()),
-            "Netsepio: Not the owner of the node or the operator"
+            "NetSepio: Not the owner of the node or the operator"
         );
-        require(nodes[nodeId].exists, "Netsepio: Node does not exist");
+        require(nodes[nodeId].exists, "NetSepio: Node does not exist");
 
         checkpoint[nodeId] = data;
 
