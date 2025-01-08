@@ -23,7 +23,7 @@ contract NetSepioV1 is Context, AccessControl {
     /// @notice Structure to store node information
     struct Node {
         string id;
-        address user;
+        address addr;
         string name;
         string spec;
         string config;
@@ -47,13 +47,15 @@ contract NetSepioV1 is Context, AccessControl {
     event NodeRegistered(
         string id,
         string name,
+        address addr,
         string spec,
         string config,
         string ipAddress,
         string region,
         string location,
         string metadata,
-        address owner
+        address owner,
+        address registrant
     );
 
     event NodeStatusUpdated(string id, Status newStatus);
@@ -69,9 +71,10 @@ contract NetSepioV1 is Context, AccessControl {
     }
 
     /// @notice Registers a new node in the network
-    /// @dev Only operator can register new nodes
+    /// @dev Anyone including operator can register a node
     function registerNode(
         string memory id,
+        address _addr,
         string memory name,
         string memory spec,
         string memory config,
@@ -80,13 +83,13 @@ contract NetSepioV1 is Context, AccessControl {
         string memory location,
         string memory metadata,
         address _owner
-    ) external onlyRole(OPERATOR_ROLE) {
+    ) external {
         require(!nodes[id].exists, "Node already exists!");
 
         nodes[id] = Node({
             id: id,
-            user: _msgSender(),
             name: name,
+            addr: _addr,
             spec: spec,
             config: config,
             ipAddress: ipAddress,
@@ -101,13 +104,15 @@ contract NetSepioV1 is Context, AccessControl {
         emit NodeRegistered(
             id,
             name,
+            _addr,
             spec,
             config,
             ipAddress,
             region,
             location,
             metadata,
-            _owner
+            _owner,
+            _msgSender()
         );
     }
 
