@@ -127,10 +127,40 @@ anchor build
 1. Deploy to your desired cluster:
 
 ```bash
-anchor deploy
+<<<<<<< HEAD
+solana address -k target/deploy/erebrus_registry-keypair.json
 
 ```
 
+1. Update program ID:
+
+- Update `declare_id!()` in `lib.rs`
+- Update `Anchor.toml` program ID
+
+1. Deploy to devnet:
+
+```bash
+# Configure to devnet
+solana config set --url devnet
+
+# Airdrop some SOL if needed
+solana airdrop 2 <your-wallet-address> --url devnet
+
+# Deploy
+=======
+>>>>>>> main
+anchor deploy
+
+```
+ Deployment : 
+
+<<<<<<< HEAD
+Program Id: 6HuaUmMRvSfbgXAqzbCLZCW39rGkzoKUeWhjPc4eyEJ8
+
+Signature: 58WApkmXPrP4CkjcvXHQo6sJ1T9DB19ghWSPitqMkp2z7DZSu8fdPr75g3pV6CdFEs8YgqrzNg7NmE72LrgErxxz
+ 
+[View on Solana Explorer](https://explorer.solana.com/address/6HuaUmMRvSfbgXAqzbCLZCW39rGkzoKUeWhjPc4eyEJ8)
+=======
 ### Testing
 
 The testing process requires two terminal windows:
@@ -160,3 +190,4 @@ The `--skip-local-validator` flag is used because we're already running the vali
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+>>>>>>> main

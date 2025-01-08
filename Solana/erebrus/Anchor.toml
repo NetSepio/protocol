@@ -5,7 +5,11 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
+<<<<<<< HEAD:Eclipse/erebrus_v1/Anchor.toml
+erebrus_v1 = "6HuaUmMRvSfbgXAqzbCLZCW39rGkzoKUeWhjPc4eyEJ8"
+=======
 erebrus = "6qnn1UZoy688fpTNqdkhiEogHFbqephGRNGy8nz3zY5o"
+>>>>>>> main:Solana/erebrus/Anchor.toml
 
 [registry]
 url = "https://api.apr.dev"

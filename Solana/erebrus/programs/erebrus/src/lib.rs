@@ -1,6 +1,10 @@
 use anchor_lang::prelude::*;
 
+<<<<<<< HEAD:Eclipse/erebrus_v1/programs/erebrus_v1/src/lib.rs
+declare_id!("BbrLieEbnzqfa6JU4hWFZEx5v5uN9ku84QFVkUHJo9P2"); 
+=======
 declare_id!("6qnn1UZoy688fpTNqdkhiEogHFbqephGRNGy8nz3zY5o");
+>>>>>>> main:Solana/erebrus/programs/erebrus/src/lib.rs
 
 pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 

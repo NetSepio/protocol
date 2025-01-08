@@ -1,6 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-<<<<<<< HEAD:Solana/erebrus_v1/tests/erebrus_v1.ts
 import { PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { Erebrus } from "../target/types/erebrus";
@@ -31,15 +30,6 @@ describe("erebrus_v1", () => {
     }),
     owner: user.publicKey,
   };
-=======
-import { Erebrus } from "../target/types/erebrus";
-
-describe("erebrus", () => {
-  // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
-
-  const program = anchor.workspace.Erebrus as Program<Erebrus>;
->>>>>>> main:Solana/erebrus/tests/erebrus.ts
 
   it("Register Node", async () => {
     // Find PDA for the node
