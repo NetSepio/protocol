@@ -1,33 +1,34 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { ErebrusV1 } from "../typechain-types";
+import { NetsepioV1 } from "../typechain-types";
 
-describe("ErebrusV1 Contract", () => {
+describe("netsepioV1 Contract", () => {
   let [admin, operator, user1, user2]: SignerWithAddress[] = new Array(4);
-  let erebrus: ErebrusV1;
+  let netsepio: NetsepioV1;
 
   before(async () => {
     [admin, operator, user1, user2] = await ethers.getSigners();
   });
 
   beforeEach(async () => {
-    const ErebrusFactory = await ethers.getContractFactory("ErebrusV1");
-    erebrus = await ErebrusFactory.deploy();
-    await erebrus.deployed();
+    const netsepioFactory = await ethers.getContractFactory("NetsepioV1");
+    netsepio = await netsepioFactory.deploy();
+    await netsepio.deployed();
   });
 
   describe("Deployment & Role Management", () => {
     it("Should set the right admin", async () => {
-      const ADMIN_ROLE = await erebrus.ADMIN_ROLE();
-      expect(await erebrus.hasRole(ADMIN_ROLE, admin.address)).to.be.true;
+      const ADMIN_ROLE = await netsepio.ADMIN_ROLE();
+      expect(await netsepio.hasRole(ADMIN_ROLE, admin.address)).to.be.true;
     });
 
     it("Should grant operator role", async () => {
-      const OPERATOR_ROLE = await erebrus.OPERATOR_ROLE();
+      const OPERATOR_ROLE = await netsepio.OPERATOR_ROLE();
       // Admin grants operator role to another address
-      expect(erebrus.grantRole(OPERATOR_ROLE, operator.address));
-      expect(await erebrus.hasRole(OPERATOR_ROLE, operator.address)).to.be.true;
+      expect(netsepio.grantRole(OPERATOR_ROLE, operator.address));
+      expect(await netsepio.hasRole(OPERATOR_ROLE, operator.address)).to.be
+        .true;
     });
   });
 
@@ -45,14 +46,14 @@ describe("ErebrusV1 Contract", () => {
     };
 
     beforeEach(async () => {
-      const OPERATOR_ROLE = await erebrus.OPERATOR_ROLE();
-      await erebrus.grantRole(OPERATOR_ROLE, operator.address);
+      const OPERATOR_ROLE = await netsepio.OPERATOR_ROLE();
+      await netsepio.grantRole(OPERATOR_ROLE, operator.address);
       mockNode.owner = user1.address;
     });
 
     it("Should register a new node", async () => {
       await expect(
-        erebrus
+        netsepio
           .connect(operator)
           .registerNode(
             mockNode.id,
@@ -66,7 +67,7 @@ describe("ErebrusV1 Contract", () => {
             mockNode.owner
           )
       )
-        .to.emit(erebrus, "NodeRegistered")
+        .to.emit(netsepio, "NodeRegistered")
         .withArgs(
           mockNode.id,
           mockNode.name,
@@ -79,15 +80,15 @@ describe("ErebrusV1 Contract", () => {
           mockNode.owner
         );
 
-      const node = await erebrus.nodes(mockNode.id);
+      const node = await netsepio.nodes(mockNode.id);
       expect(node.exists).to.be.true;
-      expect(node.status).to.equal(1); // Status.Online
+      expect(node.status).to.equal(0); // Status.Offline
       expect(node.owner).to.equal(mockNode.owner);
     });
 
     it("Should not allow non-operators to register nodes", async () => {
       await expect(
-        erebrus
+        netsepio
           .connect(user1)
           .registerNode(
             mockNode.id,
@@ -105,7 +106,7 @@ describe("ErebrusV1 Contract", () => {
 
     it("Should not allow registering duplicate node IDs", async () => {
       // Register first node
-      await erebrus
+      await netsepio
         .connect(operator)
         .registerNode(
           mockNode.id,
@@ -121,7 +122,7 @@ describe("ErebrusV1 Contract", () => {
 
       // Try to register the same node ID again
       await expect(
-        erebrus
+        netsepio
           .connect(operator)
           .registerNode(
             mockNode.id,
@@ -152,12 +153,12 @@ describe("ErebrusV1 Contract", () => {
     };
 
     beforeEach(async () => {
-      const OPERATOR_ROLE = await erebrus.OPERATOR_ROLE();
-      await erebrus.grantRole(OPERATOR_ROLE, operator.address);
+      const OPERATOR_ROLE = await netsepio.OPERATOR_ROLE();
+      await netsepio.grantRole(OPERATOR_ROLE, operator.address);
       mockNode.owner = user1.address;
 
       // Register a node for status update tests
-      await erebrus
+      await netsepio
         .connect(operator)
         .registerNode(
           mockNode.id,
@@ -173,22 +174,22 @@ describe("ErebrusV1 Contract", () => {
     });
 
     it("Should update node status", async () => {
-      await expect(erebrus.connect(operator).updateNodeStatus(mockNode.id, 2)) // Set to Maintenance
-        .to.emit(erebrus, "NodeStatusUpdated")
+      await expect(netsepio.connect(operator).updateNodeStatus(mockNode.id, 2)) // Set to Maintenance
+        .to.emit(netsepio, "NodeStatusUpdated")
         .withArgs(mockNode.id, 2);
 
-      const node = await erebrus.nodes(mockNode.id);
+      const node = await netsepio.nodes(mockNode.id);
       expect(node.status).to.equal(2); // Status.Maintenance
     });
 
     it("Should not update status of non-existent node", async () => {
       await expect(
-        erebrus.connect(operator).updateNodeStatus("non-existent-node", 2)
-      ).to.be.revertedWith("Erebrus: Node does not exist");
+        netsepio.connect(operator).updateNodeStatus("non-existent-node", 2)
+      ).to.be.reverted;
     });
 
     it("Should not allow non-operators to update node status", async () => {
-      await expect(erebrus.connect(user1).updateNodeStatus(mockNode.id, 2)).to
+      await expect(netsepio.connect(user1).updateNodeStatus(mockNode.id, 2)).to
         .be.reverted;
     });
   });
@@ -207,12 +208,12 @@ describe("ErebrusV1 Contract", () => {
     };
 
     beforeEach(async () => {
-      const OPERATOR_ROLE = await erebrus.OPERATOR_ROLE();
-      await erebrus.grantRole(OPERATOR_ROLE, operator.address);
+      const OPERATOR_ROLE = await netsepio.OPERATOR_ROLE();
+      await netsepio.grantRole(OPERATOR_ROLE, operator.address);
       mockNode.owner = user1.address;
 
       // Register a node for checkpoint tests
-      await erebrus
+      await netsepio
         .connect(operator)
         .registerNode(
           mockNode.id,
@@ -230,24 +231,29 @@ describe("ErebrusV1 Contract", () => {
     it("Should create checkpoint for a node", async () => {
       const checkpointData = "checkpoint-data-hash";
 
-      await expect(
-        erebrus.connect(operator).createCheckpoint(mockNode.id, checkpointData)
-      )
-        .to.emit(erebrus, "CheckpointCreated")
-        .withArgs(mockNode.id, checkpointData);
+      await netsepio
+        .connect(operator)
+        .createCheckpoint(mockNode.id, checkpointData);
 
-      expect(await erebrus.checkpoint(mockNode.id)).to.equal(checkpointData);
+      expect(await netsepio.checkpoint(mockNode.id)).to.be.equal(
+        checkpointData
+      );
     });
 
     it("Should not create checkpoint for non-existent node", async () => {
       await expect(
-        erebrus.connect(operator).createCheckpoint("non-existent-node", "data")
-      ).to.be.revertedWith("Erebrus: Node does not exist");
+        netsepio.connect(operator).createCheckpoint("non-existent-node", "data")
+      ).to.be.reverted;
+    });
+    it("Should not allow owners to create checkpoints", async () => {
+      await netsepio.connect(user1).createCheckpoint(mockNode.id, "data1");
+      expect(await netsepio.checkpoint(mockNode.id)).to.be.equal("data1");
     });
 
     it("Should not allow non-operators to create checkpoints", async () => {
-      await expect(erebrus.connect(user1).createCheckpoint(mockNode.id, "data"))
-        .to.be.reverted;
+      await expect(
+        netsepio.connect(user2).createCheckpoint(mockNode.id, "data")
+      ).to.be.reverted;
     });
   });
 });

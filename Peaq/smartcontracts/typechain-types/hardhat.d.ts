@@ -29,9 +29,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC165__factory>;
     getContractFactory(
-      name: "ErebrusV1",
+      name: "NetsepioV1",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ErebrusV1__factory>;
+    ): Promise<Contracts.NetsepioV1__factory>;
 
     getContractAt(
       name: "AccessControl",
@@ -54,10 +54,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC165>;
     getContractAt(
-      name: "ErebrusV1",
+      name: "NetsepioV1",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.ErebrusV1>;
+    ): Promise<Contracts.NetsepioV1>;
 
     // default types
     getContractFactory(

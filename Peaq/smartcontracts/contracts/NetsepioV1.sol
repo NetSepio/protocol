@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 
 /// @title ErebrusV1
 /// @notice Smart contract for managing nodes in the Erebrus network with admin and operator control
-contract ErebrusV1 is Context, AccessControl {
+contract NetsepioV1 is Context, AccessControl {
     /// Status codes for nodes
     /// @dev 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated
     enum Status {
@@ -97,7 +97,7 @@ contract ErebrusV1 is Context, AccessControl {
             location: location,
             metadata: metadata,
             owner: _owner,
-            status: Status.Online,
+            status: Status.Offline,
             exists: true
         });
 
@@ -134,7 +134,12 @@ contract ErebrusV1 is Context, AccessControl {
     function createCheckpoint(
         string memory nodeId,
         string memory data
-    ) external onlyRole(OPERATOR_ROLE) {
+    ) external {
+        require(
+            _msgSender() == nodes[nodeId].owner ||
+                hasRole(OPERATOR_ROLE, _msgSender()),
+            "Erebrus: Not the owner of the node or the operator"
+        );
         require(nodes[nodeId].exists, "Erebrus: Node does not exist");
 
         checkpoint[nodeId] = data;
