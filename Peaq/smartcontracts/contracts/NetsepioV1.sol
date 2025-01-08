@@ -4,9 +4,9 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
-/// @title ErebrusV1
-/// @notice Smart contract for managing nodes in the Erebrus network with admin and operator control
-contract NetsepioV1 is Context, AccessControl {
+/// @title Netsepio
+/// @notice Smart contract for managing nodes in the Netsepio network with admin and operator control
+contract Netsepio is Context, AccessControl {
     /// Status codes for nodes
     /// @dev 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated
     enum Status {
@@ -25,7 +25,7 @@ contract NetsepioV1 is Context, AccessControl {
         string id;
         address user;
         string name;
-        string nodeType;
+        string spec;
         string config;
         string ipAddress;
         string region;
@@ -42,15 +42,12 @@ contract NetsepioV1 is Context, AccessControl {
     /// @notice Structure to store checkpoint data
     mapping(string => string) public checkpoint;
 
-    /// TODO: remove this
-    string[] public nodeIds;
-
     /// @notice Events for different node operations
     // Modified added config, metadata
     event NodeRegistered(
         string id,
         string name,
-        string nodeType,
+        string spec,
         string config,
         string ipAddress,
         string region,
@@ -76,7 +73,7 @@ contract NetsepioV1 is Context, AccessControl {
     function registerNode(
         string memory id,
         string memory name,
-        string memory nodeType,
+        string memory spec,
         string memory config,
         string memory ipAddress,
         string memory region,
@@ -90,7 +87,7 @@ contract NetsepioV1 is Context, AccessControl {
             id: id,
             user: _msgSender(),
             name: name,
-            nodeType: nodeType,
+            spec: spec,
             config: config,
             ipAddress: ipAddress,
             region: region,
@@ -101,12 +98,10 @@ contract NetsepioV1 is Context, AccessControl {
             exists: true
         });
 
-        nodeIds.push(id);
-
         emit NodeRegistered(
             id,
             name,
-            nodeType,
+            spec,
             config,
             ipAddress,
             region,
@@ -122,7 +117,7 @@ contract NetsepioV1 is Context, AccessControl {
         string memory id,
         Status newStatus
     ) external onlyRole(OPERATOR_ROLE) {
-        require(nodes[id].exists, "Erebrus: Node does not exist");
+        require(nodes[id].exists, "Netsepio: Node does not exist");
 
         nodes[id].status = newStatus;
 
@@ -130,7 +125,7 @@ contract NetsepioV1 is Context, AccessControl {
     }
 
     /// @notice Creates a checkpoint for a node
-    /// @dev Only operator can create checkpoints
+    /// @dev Only operator and owner can create checkpoints
     function createCheckpoint(
         string memory nodeId,
         string memory data
@@ -138,9 +133,9 @@ contract NetsepioV1 is Context, AccessControl {
         require(
             _msgSender() == nodes[nodeId].owner ||
                 hasRole(OPERATOR_ROLE, _msgSender()),
-            "Erebrus: Not the owner of the node or the operator"
+            "Netsepio: Not the owner of the node or the operator"
         );
-        require(nodes[nodeId].exists, "Erebrus: Node does not exist");
+        require(nodes[nodeId].exists, "Netsepio: Node does not exist");
 
         checkpoint[nodeId] = data;
 

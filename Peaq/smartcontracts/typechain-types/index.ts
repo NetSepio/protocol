@@ -5,10 +5,10 @@ export type { AccessControl } from "./AccessControl";
 export type { IAccessControl } from "./IAccessControl";
 export type { ERC165 } from "./ERC165";
 export type { IERC165 } from "./IERC165";
-export type { NetsepioV1 } from "./NetsepioV1";
+export type { Netsepio } from "./Netsepio";
 
 export { AccessControl__factory } from "./factories/AccessControl__factory";
 export { IAccessControl__factory } from "./factories/IAccessControl__factory";
 export { ERC165__factory } from "./factories/ERC165__factory";
 export { IERC165__factory } from "./factories/IERC165__factory";
-export { NetsepioV1__factory } from "./factories/NetsepioV1__factory";
+export { Netsepio__factory } from "./factories/Netsepio__factory";

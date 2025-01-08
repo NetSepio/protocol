@@ -1,18 +1,18 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { NetsepioV1 } from "../typechain-types";
+import { Netsepio } from "../typechain-types";
 
-describe("netsepioV1 Contract", () => {
+describe("netsepio Contract", () => {
   let [admin, operator, user1, user2]: SignerWithAddress[] = new Array(4);
-  let netsepio: NetsepioV1;
+  let netsepio: Netsepio;
 
   before(async () => {
     [admin, operator, user1, user2] = await ethers.getSigners();
   });
 
   beforeEach(async () => {
-    const netsepioFactory = await ethers.getContractFactory("NetsepioV1");
+    const netsepioFactory = await ethers.getContractFactory("Netsepio");
     netsepio = await netsepioFactory.deploy();
     await netsepio.deployed();
   });
