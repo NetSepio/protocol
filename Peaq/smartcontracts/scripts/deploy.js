@@ -7,19 +7,19 @@ let blockNumber;
 let Verified = false;
 
 async function main() {
-  const erebrusFactory = await hre.ethers.getContractFactory("ErebrusV1");
-  const erebrus = await erebrusFactory.deploy();
+  const netsepioFactory = await hre.ethers.getContractFactory("NetsepioV1");
+  const netsepio = await netsepioFactory.deploy();
 
-  await erebrus.deployed();
+  await netsepio.deployed();
 
-  console.log("Erebrus Contract Deployed to:", erebrus.address);
-  contractAddress = erebrus.address;
-  blockNumber = erebrus.provider._maxInternalBlockNumber;
+  console.log("Netsepio Contract Deployed to:", netsepio.address);
+  contractAddress = netsepio.address;
+  blockNumber = netsepio.provider._maxInternalBlockNumber;
 
   /// VERIFY
   if (hre.network.name != "hardhat") {
-    await erebrus.deployTransaction.wait(6);
-    await verify(erebrus.address, []);
+    await netsepio.deployTransaction.wait(6);
+    await verify(netsepio.address, []);
   }
 
   let chainId;
