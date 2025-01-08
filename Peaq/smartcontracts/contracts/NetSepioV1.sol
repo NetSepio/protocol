@@ -84,7 +84,7 @@ contract NetSepioV1 is Context, AccessControl {
         string memory metadata,
         address _owner
     ) external {
-        require(!nodes[id].exists, "Node already exists!");
+        require(!nodes[id].exists, "NetSepio: Node already exists!");
 
         nodes[id] = Node({
             id: id,
