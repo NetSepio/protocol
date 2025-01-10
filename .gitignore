@@ -15,3 +15,7 @@ build
 artifacts
 cache
 
+typechain-types
+
+coverage.json
+coverage

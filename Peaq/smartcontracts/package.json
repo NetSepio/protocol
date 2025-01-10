@@ -31,7 +31,7 @@
     "prettier": "^2.5.1",
     "prettier-plugin-solidity": "^1.1.3",
     "solhint": "^3.3.6",
-    "solidity-coverage": "^0.7.18",
+    "solidity-coverage": "^0.8.14",
     "ts-node": "^10.4.0",
     "typechain": "^7.0.0",
     "typescript": "^4.5.5"
@@ -44,7 +44,7 @@
     "lint:fix": "solhint 'contracts/**/*.sol' --fix",
     "format": "prettier --write .",
     "coverage": "hardhat coverage",
-    "deploy-erebrus": "hardhat run scripts/erebrus-deploy.js"
+    "deploy": "hardhat run scripts/deploy.js"
   },
   "dependencies": {
     "@chainlink/contracts": "^1.1.1",

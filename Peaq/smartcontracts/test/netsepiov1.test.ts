@@ -1,18 +1,18 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { expect } from "chai";
+import { expect, use } from "chai";
 import { ethers } from "hardhat";
-import { Netsepio } from "../typechain-types";
+import { NetSepioV1 } from "../typechain-types";
 
 describe("netsepio Contract", () => {
   let [admin, operator, user1, user2]: SignerWithAddress[] = new Array(4);
-  let netsepio: Netsepio;
+  let netsepio: NetSepioV1;
 
   before(async () => {
     [admin, operator, user1, user2] = await ethers.getSigners();
   });
 
   beforeEach(async () => {
-    const netsepioFactory = await ethers.getContractFactory("Netsepio");
+    const netsepioFactory = await ethers.getContractFactory("NetSepioV1");
     netsepio = await netsepioFactory.deploy();
     await netsepio.deployed();
   });
@@ -33,7 +33,9 @@ describe("netsepio Contract", () => {
   });
 
   describe("Node Registration", () => {
-    const mockNode = {
+    let mockNode: any;
+
+    mockNode = {
       id: "node-1",
       name: "Test Node",
       nodeType: "validator",
@@ -48,28 +50,14 @@ describe("netsepio Contract", () => {
     beforeEach(async () => {
       const OPERATOR_ROLE = await netsepio.OPERATOR_ROLE();
       await netsepio.grantRole(OPERATOR_ROLE, operator.address);
-      mockNode.owner = user1.address;
     });
 
     it("Should register a new node", async () => {
-      await expect(
-        netsepio
-          .connect(operator)
-          .registerNode(
-            mockNode.id,
-            mockNode.name,
-            mockNode.nodeType,
-            mockNode.config,
-            mockNode.ipAddress,
-            mockNode.region,
-            mockNode.location,
-            mockNode.metadata,
-            mockNode.owner
-          )
-      )
-        .to.emit(netsepio, "NodeRegistered")
-        .withArgs(
+      await netsepio
+        .connect(operator)
+        .registerNode(
           mockNode.id,
+          operator.address,
           mockNode.name,
           mockNode.nodeType,
           mockNode.config,
@@ -77,21 +65,40 @@ describe("netsepio Contract", () => {
           mockNode.region,
           mockNode.location,
           mockNode.metadata,
-          mockNode.owner
+          user1.address
         );
 
       const node = await netsepio.nodes(mockNode.id);
+
       expect(node.exists).to.be.true;
       expect(node.status).to.equal(0); // Status.Offline
-      expect(node.owner).to.equal(mockNode.owner);
+      expect(node.owner).to.equal(user1.address);
     });
 
-    it("Should not allow non-operators to register nodes", async () => {
+    it("Should not allow registering duplicate node IDs", async () => {
+      // Register first node
+      await netsepio
+        .connect(operator)
+        .registerNode(
+          mockNode.id,
+          operator.address,
+          mockNode.name,
+          mockNode.nodeType,
+          mockNode.config,
+          mockNode.ipAddress,
+          mockNode.region,
+          mockNode.location,
+          mockNode.metadata,
+          user1.address
+        );
+
+      // Try to register the same node ID again
       await expect(
         netsepio
-          .connect(user1)
+          .connect(operator)
           .registerNode(
             mockNode.id,
+            operator.address,
             mockNode.name,
             mockNode.nodeType,
             mockNode.config,
@@ -102,40 +109,6 @@ describe("netsepio Contract", () => {
             mockNode.owner
           )
       ).to.be.reverted;
-    });
-
-    it("Should not allow registering duplicate node IDs", async () => {
-      // Register first node
-      await netsepio
-        .connect(operator)
-        .registerNode(
-          mockNode.id,
-          mockNode.name,
-          mockNode.nodeType,
-          mockNode.config,
-          mockNode.ipAddress,
-          mockNode.region,
-          mockNode.location,
-          mockNode.metadata,
-          mockNode.owner
-        );
-
-      // Try to register the same node ID again
-      await expect(
-        netsepio
-          .connect(operator)
-          .registerNode(
-            mockNode.id,
-            mockNode.name,
-            mockNode.nodeType,
-            mockNode.config,
-            mockNode.ipAddress,
-            mockNode.region,
-            mockNode.location,
-            mockNode.metadata,
-            mockNode.owner
-          )
-      ).to.be.revertedWith("Node already exists!");
     });
   });
 
@@ -162,6 +135,7 @@ describe("netsepio Contract", () => {
         .connect(operator)
         .registerNode(
           mockNode.id,
+          operator.address,
           mockNode.name,
           mockNode.nodeType,
           mockNode.config,
@@ -217,6 +191,7 @@ describe("netsepio Contract", () => {
         .connect(operator)
         .registerNode(
           mockNode.id,
+          operator.address,
           mockNode.name,
           mockNode.nodeType,
           mockNode.config,

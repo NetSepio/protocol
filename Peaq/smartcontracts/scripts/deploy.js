@@ -7,7 +7,7 @@ let blockNumber;
 let Verified = false;
 
 async function main() {
-  const netsepioFactory = await hre.ethers.getContractFactory("NetsepioV1");
+  const netsepioFactory = await hre.ethers.getContractFactory("NetSepioV1");
   const netsepio = await netsepioFactory.deploy();
 
   await netsepio.deployed();
@@ -16,11 +16,7 @@ async function main() {
   contractAddress = netsepio.address;
   blockNumber = netsepio.provider._maxInternalBlockNumber;
 
-  /// VERIFY
-  if (hre.network.name != "hardhat") {
-    await netsepio.deployTransaction.wait(6);
-    await verify(netsepio.address, []);
-  }
+  
 
   let chainId;
 
@@ -36,24 +32,6 @@ async function main() {
   // Log the JSON string
   console.log(jsonString);
 }
-
-// async function verify(contractAddress, args) {
-const verify = async (contractAddress, args) => {
-  console.log("Verifying contract...");
-  try {
-    await run("verify:verify", {
-      address: contractAddress,
-      constructorArguments: args,
-    });
-    Verified = true;
-  } catch (e) {
-    if (e.message.toLowerCase().includes("already verified")) {
-      console.log("Already Verified!");
-    } else {
-      console.log(e);
-    }
-  }
-};
 
 // main
 main()
