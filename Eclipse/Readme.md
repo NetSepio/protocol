@@ -2,6 +2,30 @@
 
 A Solana program for managing network nodes with administrative controls and checkpointing capabilities.
 
+## Prerequisites
+
+- Node.js
+- Rust
+- Yarn
+- Solana CLI
+- Anchor CLI
+
+## Setup
+
+To change the cluster, you can change the cluster in the Anchor.toml file.
+
+1. Build the program:
+
+```bash
+yarn build
+```
+
+2. Run the tests:
+
+```bash
+yarn test
+```
+
 ## Overview
 
 Eclipse is a Solana program built with Anchor that provides functionality for:
@@ -32,3 +56,7 @@ Eclipse is a Solana program built with Anchor that provides functionality for:
 - `OFFLINE_STATUS (0)`: Node is offline
 - `ONLINE_STATUS (1)`: Node is online and operational
 - `MAINTENANCE_STATUS (2)`: Node is under maintenance
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
