@@ -3,10 +3,17 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /// @title NetSepio
 /// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
-contract NetSepioV1 is Context, AccessControl {
+contract NetSepioV1 is Context, AccessControl, ERC721 {
+    /// Role definition for admin
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+
+    uint256 public counter;
+
     /// Status codes for nodes
     /// @dev 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated
     enum Status {
@@ -15,10 +22,6 @@ contract NetSepioV1 is Context, AccessControl {
         Maintenance,
         Deactivated
     }
-
-    /// Role definition for admin
-    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /// @notice Structure to store node information
     struct Node {
@@ -42,6 +45,8 @@ contract NetSepioV1 is Context, AccessControl {
     /// @notice Structure to store checkpoint data
     mapping(string => string) public checkpoint;
 
+    mapping(uint256 => string) public _tokenURI;
+
     /// @notice Events for different node operations
     // Modified added config, metadata
     event NodeRegistered(
@@ -63,7 +68,7 @@ contract NetSepioV1 is Context, AccessControl {
     event CheckpointCreated(string nodeId, string data);
 
     /// @notice Contract constructor that sets up admin role
-    constructor() {
+    constructor() ERC721("NetSepio", "NSP") {
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(OPERATOR_ROLE, ADMIN_ROLE);
         _grantRole(ADMIN_ROLE, _msgSender());
@@ -82,6 +87,7 @@ contract NetSepioV1 is Context, AccessControl {
         string memory region,
         string memory location,
         string memory metadata,
+        string memory nftMetadata,
         address _owner
     ) external {
         require(!nodes[id].exists, "NetSepio: Node already exists!");
@@ -100,7 +106,12 @@ contract NetSepioV1 is Context, AccessControl {
             status: Status.Offline,
             exists: true
         });
+        counter++;
+        uint256 tokenId = counter;
 
+        _mint(_msgSender(), tokenId);
+        _tokenURI[tokenId] = nftMetadata;
+        
         emit NodeRegistered(
             id,
             name,
@@ -147,10 +158,36 @@ contract NetSepioV1 is Context, AccessControl {
         emit CheckpointCreated(nodeId, data);
     }
 
+    function updateTokenURI(
+        uint256 tokenId,
+        string memory uri
+    ) public onlyRole(OPERATOR_ROLE) {
+        _tokenURI[tokenId] = uri;
+    }
+
+    function tokenURI(
+        uint256 tokenId
+    ) public view override returns (string memory) {
+        _requireOwned(tokenId);
+        return _tokenURI[tokenId];
+    }
+
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override(ERC721) returns (address) {
+        address from = _ownerOf(tokenId);
+        if (from != address(0) && to != address(0)) {
+            revert("Soulbound: Transfer failed");
+        }
+        return super._update(to, tokenId, auth);
+    }
+
     // The following functions are overrides required by Solidity.
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(AccessControl) returns (bool) {
+    ) public view override(AccessControl, ERC721) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
