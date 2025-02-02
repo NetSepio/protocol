@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
+/// TODO
+/// 1. add a function to burn the NFT
 
 /// @title NetSepio
 /// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
@@ -25,7 +28,6 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
 
     /// @notice Structure to store node information
     struct Node {
-        string id;
         address addr;
         string name;
         string spec;
@@ -35,6 +37,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         string location;
         string metadata;
         address owner;
+        uint256 tokenId;
         Status status;
         bool exists;
     }
@@ -45,7 +48,9 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
     /// @notice Structure to store checkpoint data
     mapping(string => string) public checkpoint;
 
-    mapping(uint256 => string) public _tokenURI;
+    mapping(uint256 => string) private _tokenURI;
+
+    mapping(uint256 => string) public tokenIdToNodeId;
 
     /// @notice Events for different node operations
     // Modified added config, metadata
@@ -78,8 +83,8 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
     /// @notice Registers a new node in the network
     /// @dev Anyone including operator can register a node
     function registerNode(
-        string memory id,
         address _addr,
+        string memory id,
         string memory name,
         string memory spec,
         string memory config,
@@ -92,8 +97,13 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
     ) external {
         require(!nodes[id].exists, "NetSepio: Node already exists!");
 
+        counter++;
+        uint256 tokenId = counter;
+
+        _mint(_msgSender(), tokenId);
+        _tokenURI[tokenId] = nftMetadata;
+
         nodes[id] = Node({
-            id: id,
             name: name,
             addr: _addr,
             spec: spec,
@@ -103,15 +113,11 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
             location: location,
             metadata: metadata,
             owner: _owner,
+            tokenId: tokenId,
             status: Status.Offline,
             exists: true
         });
-        counter++;
-        uint256 tokenId = counter;
 
-        _mint(_msgSender(), tokenId);
-        _tokenURI[tokenId] = nftMetadata;
-        
         emit NodeRegistered(
             id,
             name,
@@ -158,10 +164,22 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         emit CheckpointCreated(nodeId, data);
     }
 
+    function deactivateNode(string memory nodeId, uint256 tokenId) public {
+        require(nodes[nodeId].exists, "NetSepio: Node does not exist");
+        require(
+            ownerOf(tokenId) == _msgSender(),
+            "NetSepio: Not the owner of the node"
+        );
+        _burn(tokenId);
+        nodes[nodeId].status = Status.Deactivated;
+        nodes[nodeId].exists = false;
+    }
+
     function updateTokenURI(
         uint256 tokenId,
         string memory uri
     ) public onlyRole(OPERATOR_ROLE) {
+        _requireOwned(tokenId);
         _tokenURI[tokenId] = uri;
     }
 
@@ -178,7 +196,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         address auth
     ) internal override(ERC721) returns (address) {
         address from = _ownerOf(tokenId);
-        if (from != address(0) && to != address(0)) {
+        if (from != address(0) || to != address(0)) {
             revert("Soulbound: Transfer failed");
         }
         return super._update(to, tokenId, auth);
