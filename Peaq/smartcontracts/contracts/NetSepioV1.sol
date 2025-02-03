@@ -4,10 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "hardhat/console.sol";
 
-/// TODO
-/// 1. add a function to burn the NFT
 
 /// @title NetSepio
 /// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
