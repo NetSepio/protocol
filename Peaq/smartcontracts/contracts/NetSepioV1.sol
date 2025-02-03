@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "hardhat/console.sol";
 
 /// TODO
 /// 1. add a function to burn the NFT
@@ -100,7 +101,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         counter++;
         uint256 tokenId = counter;
 
-        _mint(_msgSender(), tokenId);
+        _mint(_owner, tokenId);
         _tokenURI[tokenId] = nftMetadata;
 
         nodes[id] = Node({
@@ -196,7 +197,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         address auth
     ) internal override(ERC721) returns (address) {
         address from = _ownerOf(tokenId);
-        if (from != address(0) || to != address(0)) {
+        if (from != address(0) && to != address(0)) {
             revert("Soulbound: Transfer failed");
         }
         return super._update(to, tokenId, auth);
