@@ -44,6 +44,7 @@ describe("netsepio Contract", () => {
       region: "EU-WEST",
       location: "London",
       metadata: "test-metadata",
+      nftMetadata: "www.google.com",
       owner: "", // Will be set in tests
     };
 
@@ -56,8 +57,8 @@ describe("netsepio Contract", () => {
       await netsepio
         .connect(operator)
         .registerNode(
-          mockNode.id,
           operator.address,
+          mockNode.id,
           mockNode.name,
           mockNode.nodeType,
           mockNode.config,
@@ -65,6 +66,7 @@ describe("netsepio Contract", () => {
           mockNode.region,
           mockNode.location,
           mockNode.metadata,
+          mockNode.nftMetadata,
           user1.address
         );
 
@@ -73,6 +75,13 @@ describe("netsepio Contract", () => {
       expect(node.exists).to.be.true;
       expect(node.status).to.equal(0); // Status.Offline
       expect(node.owner).to.equal(user1.address);
+
+      //NFT MINTED
+      expect(node.tokenId).to.equal(1);
+      expect(await netsepio.ownerOf(node.tokenId)).to.equal(user1.address);
+      expect(await netsepio.tokenURI(node.tokenId)).to.equal(
+        mockNode.nftMetadata
+      );
     });
 
     it("Should not allow registering duplicate node IDs", async () => {
@@ -80,8 +89,8 @@ describe("netsepio Contract", () => {
       await netsepio
         .connect(operator)
         .registerNode(
-          mockNode.id,
           operator.address,
+          mockNode.id,
           mockNode.name,
           mockNode.nodeType,
           mockNode.config,
@@ -89,6 +98,7 @@ describe("netsepio Contract", () => {
           mockNode.region,
           mockNode.location,
           mockNode.metadata,
+          mockNode.nftMetadata,
           user1.address
         );
 
@@ -97,8 +107,8 @@ describe("netsepio Contract", () => {
         netsepio
           .connect(operator)
           .registerNode(
-            mockNode.id,
             operator.address,
+            mockNode.id,
             mockNode.name,
             mockNode.nodeType,
             mockNode.config,
@@ -106,8 +116,48 @@ describe("netsepio Contract", () => {
             mockNode.region,
             mockNode.location,
             mockNode.metadata,
+            mockNode.nftMetadata,
             mockNode.owner
           )
+      ).to.be.reverted;
+    });
+    it("Should not allow token owner to be changed, token metadata to be changed only by operator", async () => {
+      await netsepio
+        .connect(operator)
+        .registerNode(
+          operator.address,
+          mockNode.id,
+          mockNode.name,
+          mockNode.nodeType,
+          mockNode.config,
+          mockNode.ipAddress,
+          mockNode.region,
+          mockNode.location,
+          mockNode.metadata,
+          mockNode.nftMetadata,
+          user1.address
+        );
+
+      const node = await netsepio.nodes(mockNode.id);
+      await expect(
+        netsepio
+          .connect(user1)
+          .transferFrom(user1.address, user2.address, node.tokenId)
+      ).to.be.reverted;
+
+      /// TOKEN METADATA SHOULD NOT BE CHANGED
+      expect(await netsepio.tokenURI(node.tokenId)).to.equal(
+        mockNode.nftMetadata
+      );
+      const newMetadata = "new-metadata";
+      await netsepio
+        .connect(operator)
+        .updateTokenURI(node.tokenId, newMetadata);
+      expect(await netsepio.tokenURI(node.tokenId)).to.equal(newMetadata);
+
+      // REVERT IF TOKEN METADATA IS CHANGED BY NON-OPERATOR
+      await expect(
+        netsepio.connect(user1).updateTokenURI(node.tokenId, newMetadata)
       ).to.be.reverted;
     });
   });
@@ -122,6 +172,7 @@ describe("netsepio Contract", () => {
       region: "EU-WEST",
       location: "London",
       metadata: "test-metadata",
+      nftMetadata: "www.google.com",
       owner: "",
     };
 
@@ -134,8 +185,8 @@ describe("netsepio Contract", () => {
       await netsepio
         .connect(operator)
         .registerNode(
-          mockNode.id,
           operator.address,
+          mockNode.id,
           mockNode.name,
           mockNode.nodeType,
           mockNode.config,
@@ -143,6 +194,7 @@ describe("netsepio Contract", () => {
           mockNode.region,
           mockNode.location,
           mockNode.metadata,
+          mockNode.nftMetadata,
           mockNode.owner
         );
     });
@@ -178,6 +230,7 @@ describe("netsepio Contract", () => {
       region: "EU-WEST",
       location: "London",
       metadata: "test-metadata",
+      nftMetadata: "www.google.com",
       owner: "",
     };
 
@@ -190,8 +243,8 @@ describe("netsepio Contract", () => {
       await netsepio
         .connect(operator)
         .registerNode(
-          mockNode.id,
           operator.address,
+          mockNode.id,
           mockNode.name,
           mockNode.nodeType,
           mockNode.config,
@@ -199,6 +252,7 @@ describe("netsepio Contract", () => {
           mockNode.region,
           mockNode.location,
           mockNode.metadata,
+          mockNode.nftMetadata,
           mockNode.owner
         );
     });
