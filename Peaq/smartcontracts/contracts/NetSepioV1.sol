@@ -119,6 +119,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         uint256 tokenId = counter;
 
         _mint(_addr, tokenId);
+
         _tokenURI[tokenId] = nftMetadata;
 
         nodes[id] = Node({

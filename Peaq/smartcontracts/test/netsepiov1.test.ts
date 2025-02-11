@@ -147,6 +147,7 @@ describe("netsepio Contract", () => {
       expect(node.status).to.equal(0); // Status.Offline
       expect(node.owner).to.equal(user1.address);
 
+
       // Verify NFT minting
       const tokenId = node.tokenId;
       expect(await netsepio.ownerOf(tokenId)).to.equal(operator.address);
@@ -208,6 +209,7 @@ describe("netsepio Contract", () => {
           )
       ).to.be.reverted;
     });
+
     it("To check register node with invalid address", async () => {
       await expect(
         netsepio
