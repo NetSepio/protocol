@@ -10,7 +10,7 @@ import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 
 //PEAQ TESTNET
-const PEAQ_AUGUNG_TESTNET = "https://rpcpc1-qa.agung.peaq.network";
+const PEAQ_AUGUNG_TESTNET = "https://wss-async.agung.peaq.network";
 //PEAQ MAINNET
 const PEAQ_RPC_URL = "https://peaq-rpc.dwellir.com";
 
