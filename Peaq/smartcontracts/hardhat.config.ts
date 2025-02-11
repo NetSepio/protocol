@@ -9,21 +9,17 @@ import "solidity-coverage";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 
+//PEAQ TESTNET
 const PEAQ_AUGUNG_TESTNET = "https://rpcpc1-qa.agung.peaq.network";
-
-//// MAINNET
-
+//PEAQ MAINNET
 const PEAQ_RPC_URL = "https://peaq-rpc.dwellir.com";
 
-const MNEMONIC =
-  process.env.MNEMONIC ||
-  "ajkskjfjksjkf ssfaasff asklkfl klfkas dfklhao asfj sfk klsfjs fkjs";
 const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET;
 const PRIVATE_KEY_TESTNET = process.env.PRIVATE_KEY_TESTNET;
 
 module.exports = {
   solidity: {
-    version: "0.8.20",
+    version: "0.8.24",
     settings: {
       optimizer: {
         enabled: true,
