@@ -36,7 +36,7 @@ describe("netsepio Contract", () => {
     let mockNode: any;
 
     mockNode = {
-      id: "node-1",
+      id: "did:netsepio:bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
       name: "Test Node",
       nodeType: "validator",
       config: "basic-config",
@@ -53,8 +53,73 @@ describe("netsepio Contract", () => {
       await netsepio.grantRole(OPERATOR_ROLE, operator.address);
     });
 
-    it("Should register a new node", async () => {
-      await netsepio
+    describe("DID Validation", () => {
+      it("Should accept valid DID format", async () => {
+        await expect(
+          netsepio
+            .connect(operator)
+            .registerNode(
+              operator.address,
+              mockNode.id,
+              mockNode.name,
+              mockNode.nodeType,
+              mockNode.config,
+              mockNode.ipAddress,
+              mockNode.region,
+              mockNode.location,
+              mockNode.metadata,
+              mockNode.nftMetadata,
+              user1.address
+            )
+        ).to.not.be.reverted;
+      });
+
+      it("Should reject invalid DID format", async () => {
+        const invalidDID = "invalid-did-format";
+        await expect(
+          netsepio
+            .connect(operator)
+            .registerNode(
+              operator.address,
+              invalidDID,
+              mockNode.name,
+              mockNode.nodeType,
+              mockNode.config,
+              mockNode.ipAddress,
+              mockNode.region,
+              mockNode.location,
+              mockNode.metadata,
+              mockNode.nftMetadata,
+              user1.address
+            )
+        ).to.be.revertedWith("NetSepio: Invalid DID format");
+      });
+
+      it("Should reject DID without netsepio prefix", async () => {
+        const invalidDID =
+          "did:other:bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi";
+        await expect(
+          netsepio
+            .connect(operator)
+            .registerNode(
+              operator.address,
+              invalidDID,
+              mockNode.name,
+              mockNode.nodeType,
+              mockNode.config,
+              mockNode.ipAddress,
+              mockNode.region,
+              mockNode.location,
+              mockNode.metadata,
+              mockNode.nftMetadata,
+              user1.address
+            )
+        ).to.be.revertedWith("NetSepio: Invalid DID format");
+      });
+    });
+
+    it("Should register a new node and mint NFT", async () => {
+      const tx = await netsepio
         .connect(operator)
         .registerNode(
           operator.address,
@@ -71,17 +136,40 @@ describe("netsepio Contract", () => {
         );
 
       const node = await netsepio.nodes(mockNode.id);
-
-      expect(node.exists).to.be.true;
+      expect(node.tokenId).to.equal(1);
+      expect(node.addr).to.equal(operator.address);
+      expect(node.name).to.equal(mockNode.name);
+      expect(node.spec).to.equal(mockNode.nodeType);
+      expect(node.config).to.equal(mockNode.config);
+      expect(node.ipAddress).to.equal(mockNode.ipAddress);
+      expect(node.region).to.equal(mockNode.region);
+      expect(node.location).to.equal(mockNode.location);
       expect(node.status).to.equal(0); // Status.Offline
       expect(node.owner).to.equal(user1.address);
 
-      //NFT MINTED
-      expect(node.tokenId).to.equal(1);
-      expect(await netsepio.ownerOf(node.tokenId)).to.equal(user1.address);
-      expect(await netsepio.tokenURI(node.tokenId)).to.equal(
-        mockNode.nftMetadata
-      );
+
+      // Verify NFT minting
+      const tokenId = node.tokenId;
+      expect(await netsepio.ownerOf(tokenId)).to.equal(operator.address);
+      expect(await netsepio.tokenURI(tokenId)).to.equal(mockNode.nftMetadata);
+      expect(await netsepio.tokenIdToNodeId(tokenId)).to.equal(mockNode.id);
+
+      // Verify event emission
+      await expect(tx)
+        .to.emit(netsepio, "NodeRegistered")
+        .withArgs(
+          mockNode.id,
+          mockNode.name,
+          operator.address,
+          mockNode.nodeType,
+          mockNode.config,
+          mockNode.ipAddress,
+          mockNode.region,
+          mockNode.location,
+          mockNode.metadata,
+          user1.address,
+          operator.address
+        );
     });
 
     it("Should not allow registering duplicate node IDs", async () => {
@@ -121,50 +209,96 @@ describe("netsepio Contract", () => {
           )
       ).to.be.reverted;
     });
-    it("Should not allow token owner to be changed, token metadata to be changed only by operator", async () => {
-      await netsepio
-        .connect(operator)
-        .registerNode(
-          operator.address,
-          mockNode.id,
-          mockNode.name,
-          mockNode.nodeType,
-          mockNode.config,
-          mockNode.ipAddress,
-          mockNode.region,
-          mockNode.location,
-          mockNode.metadata,
-          mockNode.nftMetadata,
-          user1.address
-        );
 
-      const node = await netsepio.nodes(mockNode.id);
+    it("To check register node with invalid address", async () => {
       await expect(
         netsepio
-          .connect(user1)
-          .transferFrom(user1.address, user2.address, node.tokenId)
+          .connect(operator)
+          .registerNode(
+            operator.address,
+            "hello",
+            mockNode.name,
+            mockNode.nodeType,
+            mockNode.config,
+            mockNode.ipAddress,
+            mockNode.region,
+            mockNode.location,
+            mockNode.metadata,
+            mockNode.nftMetadata,
+            user1.address
+          )
       ).to.be.reverted;
+    });
 
-      /// TOKEN METADATA SHOULD NOT BE CHANGED
-      expect(await netsepio.tokenURI(node.tokenId)).to.equal(
-        mockNode.nftMetadata
-      );
-      const newMetadata = "new-metadata";
-      await netsepio
-        .connect(operator)
-        .updateTokenURI(node.tokenId, newMetadata);
-      expect(await netsepio.tokenURI(node.tokenId)).to.equal(newMetadata);
+    describe("Soulbound Token Tests", () => {
+      it("Should not allow token transfer", async () => {
+        await netsepio
+          .connect(operator)
+          .registerNode(
+            operator.address,
+            mockNode.id,
+            mockNode.name,
+            mockNode.nodeType,
+            mockNode.config,
+            mockNode.ipAddress,
+            mockNode.region,
+            mockNode.location,
+            mockNode.metadata,
+            mockNode.nftMetadata,
+            user1.address
+          );
 
-      // REVERT IF TOKEN METADATA IS CHANGED BY NON-OPERATOR
-      await expect(
-        netsepio.connect(user1).updateTokenURI(node.tokenId, newMetadata)
-      ).to.be.reverted;
+        const node = await netsepio.nodes(mockNode.id);
+        await expect(
+          netsepio
+            .connect(operator)
+            .transferFrom(operator.address, user2.address, node.tokenId)
+        ).to.be.revertedWith("Soulbound: Transfer failed");
+      });
+
+      it("Should not allow minting multiple tokens to same address", async () => {
+        await netsepio
+          .connect(operator)
+          .registerNode(
+            operator.address,
+            mockNode.id,
+            mockNode.name,
+            mockNode.nodeType,
+            mockNode.config,
+            mockNode.ipAddress,
+            mockNode.region,
+            mockNode.location,
+            mockNode.metadata,
+            mockNode.nftMetadata,
+            user1.address
+          );
+
+        const newDID =
+          "did:netsepio:bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi2";
+        await expect(
+          netsepio
+            .connect(operator)
+            .registerNode(
+              operator.address,
+              newDID,
+              mockNode.name,
+              mockNode.nodeType,
+              mockNode.config,
+              mockNode.ipAddress,
+              mockNode.region,
+              mockNode.location,
+              mockNode.metadata,
+              mockNode.nftMetadata,
+              user1.address
+            )
+        ).to.be.revertedWith("NetSepio: Node already exists!");
+      });
     });
   });
 
   describe("Node Status Management", () => {
     const mockNode = {
-      id: "node-1",
+      id: "did:netsepio:bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
       name: "Test Node",
       nodeType: "validator",
       config: "basic-config",
@@ -209,9 +343,9 @@ describe("netsepio Contract", () => {
     });
 
     it("Should not update status of non-existent node", async () => {
-      await expect(
-        netsepio.connect(operator).updateNodeStatus("non-existent-node", 2)
-      ).to.be.reverted;
+      const invalidDID = "non-existent-node";
+      await expect(netsepio.connect(operator).updateNodeStatus(invalidDID, 2))
+        .to.be.reverted;
     });
 
     it("Should not allow non-operators to update node status", async () => {
@@ -222,7 +356,7 @@ describe("netsepio Contract", () => {
 
   describe("Checkpoint Management", () => {
     const mockNode = {
-      id: "node-1",
+      id: "did:netsepio:bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
       name: "Test Node",
       nodeType: "validator",
       config: "basic-config",
@@ -275,8 +409,9 @@ describe("netsepio Contract", () => {
       ).to.be.reverted;
     });
     it("Should not allow owners to create checkpoints", async () => {
-      await netsepio.connect(user1).createCheckpoint(mockNode.id, "data1");
-      expect(await netsepio.checkpoint(mockNode.id)).to.be.equal("data1");
+      await expect(
+        netsepio.connect(user1).createCheckpoint(mockNode.id, "data1")
+      ).to.be.reverted;
     });
 
     it("Should not allow non-operators to create checkpoints", async () => {

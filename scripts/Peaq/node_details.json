@@ -1,0 +1,12 @@
+ {
+      "id": "did:netsepio:bafybeigdyrzt5sfp7udm7hu76uh7y26nf3efuylqabf3oclgtqy55fbzdi",
+      "name": "Test Node",
+      "nodeType": "validator",
+      "config": "basic-config",
+      "ipAddress": "192.168.1.1",
+      "region": "EU-WEST",
+      "location": "London",
+      "metadata": "test-metadata",
+      "nftMetadata": "www.google.com",
+      "owner": ""
+}
