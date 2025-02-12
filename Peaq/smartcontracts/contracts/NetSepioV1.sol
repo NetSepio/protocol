@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
-
 /// @title NetSepio
 /// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
 
@@ -74,13 +73,15 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         string region,
         string location,
         string metadata,
-        address owner,
-        address registrant
+        address indexed owner,
+        address indexed registrant
     );
 
     event NodeStatusUpdated(string nodeId, Status newStatus);
 
     event CheckpointCreated(string nodeId, string data);
+
+    event NodeDeactivated(string nodeId, address indexed nodeAddr);
 
     /// @notice Contract constructor that sets up admin role
     constructor() ERC721("NetSepio", "NSPIO") {
@@ -118,6 +119,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         counter++;
         uint256 tokenId = counter;
 
+        /// @dev mint the nft to the node address
         _mint(_addr, tokenId);
 
         _tokenURI[tokenId] = nftMetadata;
@@ -164,7 +166,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
     }
 
     /// @notice Creates a checkpoint for a node
-    /// @dev Only operator and owner can create checkpoints
+    /// @dev Only operator and node can create checkpoints
     function createCheckpoint(
         string memory nodeId,
         string memory data
@@ -181,16 +183,19 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         emit CheckpointCreated(nodeId, data);
     }
 
+    /// @notice Deactivates a node
+    /// @dev Only the node address who is owner of the SBT can deactivate the node
     function deactivateNode(
-        string memory nodeId,
-        uint256 tokenId
+        string memory nodeId
     ) public onlyWhenNodeExists(nodeId) {
         require(
-            ownerOf(tokenId) == _msgSender(),
-            "NetSepio: Not the owner of the node"
+            ownerOf(nodes[nodeId].tokenId) == _msgSender(),
+            "NetSepio: Not the owner of the SBT"
         );
-        _burn(tokenId);
+        _burn(nodes[nodeId].tokenId);
         nodes[nodeId].status = Status.Deactivated;
+
+        emit NodeDeactivated(nodeId, _msgSender());
     }
 
     function updateTokenURI(
@@ -206,18 +211,6 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
     ) public view override returns (string memory) {
         _requireOwned(tokenId);
         return _tokenURI[tokenId];
-    }
-
-    function _update(
-        address to,
-        uint256 tokenId,
-        address auth
-    ) internal override(ERC721) returns (address) {
-        address from = _ownerOf(tokenId);
-        if (from != address(0) && to != address(0)) {
-            revert("Soulbound: Transfer failed");
-        }
-        return super._update(to, tokenId, auth);
     }
 
     /// @notice Validates if the provided DID follows the correct format
@@ -245,6 +238,18 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
             if (str[i] != prefix[i]) return false;
         }
         return true;
+    }
+
+    function _update(
+        address to,
+        uint256 tokenId,
+        address auth
+    ) internal override(ERC721) returns (address) {
+        address from = _ownerOf(tokenId);
+        if (from != address(0) && to != address(0)) {
+            revert("Soulbound: Transfer failed");
+        }
+        return super._update(to, tokenId, auth);
     }
 
     // The following functions are overrides required by Solidity.
