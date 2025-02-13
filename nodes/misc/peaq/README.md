@@ -19,7 +19,7 @@ Store.sol
 address := common.HexToAddress("0x147B8eb97fD247D06C4006D269c90C")
 instance, err := store.NewStore(address, client)
 if err != nil {
-log.Fatal(err)
+	log.Fatal(err)
 }
 _ = instance // we'll be using this in the next section
 ```
@@ -55,24 +55,24 @@ contract_load.go
 ```go
 package main
 import (
-"fmt"
-"log"
-"github.com/ethereum/go-ethereum/common"
-"github.com/ethereum/go-ethereum/ethclient"
-store "./contracts" // for demo
+	"fmt"
+	"log"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	store "./contracts" // for demo
 )
 func main() {
-client, err := ethclient.Dial("https://rinkeby.infura.io")
-if err != nil {
-log.Fatal(err)
-}
-address := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
-instance, err := store.NewStore(address, client)
-if err != nil {
-log.Fatal(err)
-}
-fmt.Println("contract is loaded")
-_ = instance
+	client, err := ethclient.Dial("https://rinkeby.infura.io")
+	if err != nil {
+		log.Fatal(err)
+	}
+	address := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
+	instance, err := store.NewStore(address, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("contract is loaded")
+	_ = instance
 }
 ```
 
@@ -96,7 +96,7 @@ nil .
 
 version, err := instance.Version(nil)
 if err != nil {
-log.Fatal(err)
+	log.Fatal(err)
 }
 fmt.Println(version) // "1.0"
 ```
@@ -113,16 +113,16 @@ abigen --bin=Store_sol_Store.bin --abi=Store_sol_Store.abi --pkg=store --out=
 
 pragma solidity ^0.4.24;
 contract Store {
-event ItemSet(bytes32 key, bytes32 value);
-string public version;
-mapping (bytes32 => bytes32) public items;
-constructor(string _version) public {
-version = _version;
-}
-function setItem(bytes32 key, bytes32 value) external {
-items[key] = value;
-emit ItemSet(key, value);
-}
+	event ItemSet(bytes32 key, bytes32 value);
+	string public version;
+	mapping (bytes32 => bytes32) public items;
+	constructor(string _version) public {
+		version = _version;
+	}
+	function setItem(bytes32 key, bytes32 value) external {
+		items[key] = value;
+		emit ItemSet(key, value);
+	}
 }
 ```
 
@@ -132,27 +132,27 @@ emit ItemSet(key, value);
 
 package main
 import (
-"fmt"
-"log"
-"[github.com/ethereum/go-ethereum/common](http://github.com/ethereum/go-ethereum/common)"
-"[github.com/ethereum/go-ethereum/ethclient](http://github.com/ethereum/go-ethereum/ethclient)"
-store "./contracts" // for demo
+	"fmt"
+	"log"
+	"http://github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	store "./contracts" // for demo
 )
 func main() {
-client, err := ethclient.Dial("[https://rinkeby.infura.io](https://rinkeby.infura.io/)")
-if err != nil {
-log.Fatal(err)
-}
-address := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
-instance, err := store.NewStore(address, client)
-if err != nil {
-log.Fatal(err)
-}
-version, err := instance.Version(nil)
-if err != nil {
-log.Fatal(err)
-}
-fmt.Println(version) // "1.0"
+	client, err := ethclient.Dial("[https://rinkeby.infura.io](https://rinkeby.infura.io/)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	address := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
+	instance, err := store.NewStore(address, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+	version, err := instance.Version(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(version) // "1.0"
 }
 ```
 
@@ -167,31 +167,31 @@ We'll also need to figure the nonce and gas price.
 Next we create a new keyed transactor which takes in the private key.
 
 ```go
-auth := bind.NewKeyedTransactor(privateKey)
-Then we need to set the standard transaction options attached to the
-keyed transactor.
-privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f3")
-if err != nil {
-log.Fatal(err)
-}
-publicKey := privateKey.Public()
-publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-if !ok {
-log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
-}
-fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
-if err != nil {
-log.Fatal(err)
-}
-gasPrice, err := client.SuggestGasPrice(context.Background())
-if err != nil {
-log.Fatal(err)
-}
-auth.Nonce = big.NewInt(int64(nonce))
-auth.Value = big.NewInt(0) // in wei
-auth.GasLimit = uint64(300000) // in units
-auth.GasPrice = gasPrice
+	auth := bind.NewKeyedTransactor(privateKey)
+	Then we need to set the standard transaction options attached to the
+	keyed transactor.
+	privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f3")
+	if err != nil {
+		log.Fatal(err)
+	}
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0) // in wei
+	auth.GasLimit = uint64(300000) // in units
+	auth.GasPrice = gasPrice
 ```
 
 Now we load an instance of the smart contract. If you recall in the
@@ -209,22 +209,20 @@ property of the transaction, and sign it with the private key. The result will
 be a signed transaction object.
 
 ```go
-
-address := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
-instance, err := store.NewStore(address, client)
-if err != nil {
-log.Fatal(err)
-}
-key := [32]byte{}
-value := [32]byte{}
-copy(key[:], []byte("foo"))
-copy(value[:], []byte("bar"))
-tx, err := instance.SetItem(auth, key, value)
-if err != nil {
-log.Fatal(err)
-}
-fmt.Printf("tx sent: %s", tx.Hash().Hex()) // tx sent: 0x8d490e535678e9a2436
-
+	address := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
+	instance, err := store.NewStore(address, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+	key := [32]byte{}
+	value := [32]byte{}
+	copy(key[:], []byte("foo"))
+	copy(value[:], []byte("bar"))
+	tx, err := instance.SetItem(auth, key, value)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("tx sent: %s", tx.Hash().Hex()) // tx sent: 0x8d490e535678e9a2436
 ```
 
 We can see now that the transaction has been successfully sent on the
@@ -236,10 +234,9 @@ To verify that the key/value was set, we read the smart contract mapping
 value.
 
 ```go
-
 result, err := instance.Items(nil, key)
 if err != nil {
-log.Fatal(err)
+	log.Fatal(err)
 }
 fmt.Println(string(result[:])) // "bar"
 ```
@@ -252,16 +249,16 @@ Store.sol
 
 pragma solidity ^0.4.24;
 contract Store {
-event ItemSet(bytes32 key, bytes32 value);
-string public version;
-mapping (bytes32 => bytes32) public items;
-constructor(string _version) public {
-version = _version;
-}
-function setItem(bytes32 key, bytes32 value) external {
-items[key] = value;
-emit ItemSet(key, value);
-}
+	event ItemSet(bytes32 key, bytes32 value);
+	string public version;
+	mapping (bytes32 => bytes32) public items;
+	constructor(string _version) public {
+		version = _version;
+	}
+	function setItem(bytes32 key, bytes32 value) external {
+		items[key] = value;
+		emit ItemSet(key, value);
+	}
 }
 
 ```
@@ -271,60 +268,60 @@ emit ItemSet(key, value);
 ```go
 package main
 import (
-"fmt"
-"log"
-"github.com/ethereum/go-ethereum/accounts/abi/bind"
-"github.com/ethereum/go-ethereum/common"
-"github.com/ethereum/go-ethereum/ethclient"
-store "./contracts" // for demo
+	"fmt"
+	"log"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	store "./contracts" // for demo
 )
 func main() {
-client, err := ethclient.Dial("https://rinkeby.infura.io")
-if err != nil {
-log.Fatal(err)
-}
-privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0")
-if err != nil {
-log.Fatal(err)
-}
-publicKey := privateKey.Public()
-publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-if !ok {
-log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
-}
-fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
-nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
-if err != nil {
-log.Fatal(err)
-}
-gasPrice, err := client.SuggestGasPrice(context.Background())
-if err != nil {
-log.Fatal(err)
-}
-auth := bind.NewKeyedTransactor(privateKey)
-auth.Nonce = big.NewInt(int64(nonce))
-auth.Value = big.NewInt(0) // in wei
-auth.GasLimit = uint64(300000) // in units
-auth.GasPrice = gasPrice
-address := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
-instance, err := store.NewStore(address, client)
-if err != nil {
-log.Fatal(err)
-}
-key := [32]byte{}
-value := [32]byte{}
-copy(key[:], []byte("foo"))
-copy(value[:], []byte("bar"))
-tx, err := instance.SetItem(auth, key, value)
-if err != nil {
-log.Fatal(err)
-}
-fmt.Printf("tx sent: %s", tx.Hash().Hex()) // tx sent: 0x8d490e535678e9a24
-result, err := instance.Items(nil, key)
-if err != nil {
-log.Fatal(err)
-}
-fmt.Println(string(result[:])) // "bar"
+	client, err := ethclient.Dial("https://rinkeby.infura.io")
+	if err != nil {
+		log.Fatal(err)
+	}
+	privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0")
+	if err != nil {
+		log.Fatal(err)
+	}
+	publicKey := privateKey.Public()
+	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
+	if !ok {
+		log.Fatal("cannot assert type: publicKey is not of type *ecdsa.PublicKey")
+	}
+	fromAddress := crypto.PubkeyToAddress(*publicKeyECDSA)
+	nonce, err := client.PendingNonceAt(context.Background(), fromAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	auth := bind.NewKeyedTransactor(privateKey)
+	auth.Nonce = big.NewInt(int64(nonce))
+	auth.Value = big.NewInt(0) // in wei
+	auth.GasLimit = uint64(300000) // in units
+	auth.GasPrice = gasPrice
+	address := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
+	instance, err := store.NewStore(address, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+	key := [32]byte{}
+	value := [32]byte{}
+	copy(key[:], []byte("foo"))
+	copy(value[:], []byte("bar"))
+	tx, err := instance.SetItem(auth, key, value)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("tx sent: %s", tx.Hash().Hex()) // tx sent: 0x8d490e535678e9a24
+	result, err := instance.Items(nil, key)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(string(result[:])) // "bar"
 }
 ```
 
@@ -339,7 +336,7 @@ the bytecode of.
 ```go
 client, err := ethclient.Dial("[https://rinkeby.infura.io](https://rinkeby.infura.io/)")
 if err != nil {
-log.Fatal(err)
+	log.Fatal(err)
 }
 contractAddress := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
 ```
@@ -351,7 +348,7 @@ and returns the bytecode in bytes format.
 ```go
 bytecode, err := client.CodeAt(context.Background(), contractAddress, nil) //
 if err != nil {
-log.Fatal(err)
+	log.Fatal(err)
 }
 fmt.Printl
 ```
@@ -361,24 +358,24 @@ fmt.Printl
 ```go
 package main
 import (
-"context"
-"encoding/hex"
-"fmt"
-"log"
-"[github.com/ethereum/go-ethereum/common](http://github.com/ethereum/go-ethereum/common)"
-"[github.com/ethereum/go-ethereum/ethclient](http://github.com/ethereum/go-ethereum/ethclient)"
+	"context"
+	"encoding/hex"
+	"fmt"
+	"log"
+	"http://github.com/ethereum/go-ethereum/common"
+	"http://github.com/ethereum/go-ethereum/ethclient"
 )
 func main() {
-client, err := ethclient.Dial("[https://rinkeby.infura.io](https://rinkeby.infura.io/)")
-if err != nil {
-log.Fatal(err)
-}
-contractAddress := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
-bytecode, err := client.CodeAt(context.Background(), contractAddress, nil)
-if err != nil {
-log.Fatal(err)
-}
-fmt.Println(hex.EncodeToString(bytecode)) // 60806...10029
+	client, err := ethclient.Dial("[https://rinkeby.infura.io](https://rinkeby.infura.io/)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	contractAddress := common.HexToAddress("0x8063E4BA4b473DDdAc016dF9765EB869fcFAf843")
+	bytecode, err := client.CodeAt(context.Background(), contractAddress, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(hex.EncodeToString(bytecode)) // 60806...10029
 }
 ```
 
@@ -391,17 +388,17 @@ with the function definitions of the functions that you can call.
 ```solidity
 pragma solidity ^0.4.24;
 contract ERC20 {
-string public constant name = "";
-string public constant symbol = "";
-uint8 public constant decimals = 0;
-function totalSupply() public constant returns (uint);
-function balanceOf(address tokenOwner) public constant returns (uint ba
-function allowance(address tokenOwner, address spender) public constan
-function transfer(address to, uint tokens) public returns (bool success);
-function approve(address spender, uint tokens) public returns (bool succe
-function transferFrom(address from, address to, uint tokens) public retur
-event Transfer(address indexed from, address indexed to, uint tokens);
-event Approval(address indexed tokenOwner, address indexed spender, u
+	string public constant name = "";
+	string public constant symbol = "";
+	uint8 public constant decimals = 0;
+	function totalSupply() public constant returns (uint);
+	function balanceOf(address tokenOwner) public constant returns (uint ba
+	function allowance(address tokenOwner, address spender) public constan
+	function transfer(address to, uint tokens) public returns (bool success);
+	function approve(address spender, uint tokens) public returns (bool succe
+	function transferFrom(address from, address to, uint tokens) public retur
+	event Transfer(address indexed from, address indexed to, uint tokens);
+	event Approval(address indexed tokenOwner, address indexed spender, u
 }
 ```
 
@@ -495,50 +492,50 @@ event Approval(address indexed tokenOwner, address indexed spender, u
 ```solidity
 package main
 import (
-"fmt"
-"log"
-"math"
-"math/big"
-"[github.com/ethereum/go-ethereum/accounts/abi/bind](http://github.com/ethereum/go-ethereum/accounts/abi/bind)"
-"[github.com/ethereum/go-ethereum/common](http://github.com/ethereum/go-ethereum/common)"
-"[github.com/ethereum/go-ethereum/ethclient](http://github.com/ethereum/go-ethereum/ethclient)"
-token "./contracts_erc20" // for demo
+	"fmt"
+	"log"
+	"math"
+	"math/big"
+	"http://github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"http://github.com/ethereum/go-ethereum/common"
+	"http://github.com/ethereum/go-ethereum/ethclient"
+	token "./contracts_erc20" // for demo
 )
 func main() {
-client, err := ethclient.Dial("[https://mainnet.infura.io](https://mainnet.infura.io/)")
-if err != nil {
-log.Fatal(err)
-}
-// Golem (GNT) Address
-tokenAddress := common.HexToAddress("0xa74476443119A942dE498590
-instance, err := token.NewToken(tokenAddress, client)
-if err != nil {
-log.Fatal(err)
-}
-address := common.HexToAddress("0x0536806df512d6cdde913cf95c9886
-bal, err := instance.BalanceOf(&bind.CallOpts{}, address)
-if err != nil {
-log.Fatal(err)
-}
-name, err := [instance.Name](http://instance.name/)(&bind.CallOpts{})
-if err != nil {
-log.Fatal(err)
-}
-symbol, err := instance.Symbol(&bind.CallOpts{})
-if err != nil {
-log.Fatal(err)
-}
-decimals, err := instance.Decimals(&bind.CallOpts{})
-if err != nil {
-log.Fatal(err)
-}
-fmt.Printf("name: %s\n", name) // "name: Golem Network"
-fmt.Printf("symbol: %s\n", symbol) // "symbol: GNT"
-fmt.Printf("decimals: %v\n", decimals) // "decimals: 18"
-fmt.Printf("wei: %s\n", bal) // "wei: 74605500647408739782407023"
-fbal := new(big.Float)
-fbal.SetString(bal.String())
-value := new(big.Float).Quo(fbal, big.NewFloat(math.Pow10(int(decimals))
-fmt.Printf("balance: %f", value) // "balance: 74605500.647409"
+	client, err := ethclient.Dial("[https://mainnet.infura.io](https://mainnet.infura.io/)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Golem (GNT) Address
+	tokenAddress := common.HexToAddress("0xa74476443119A942dE498590
+	instance, err := token.NewToken(tokenAddress, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+	address := common.HexToAddress("0x0536806df512d6cdde913cf95c9886
+	bal, err := instance.BalanceOf(&bind.CallOpts{}, address)
+	if err != nil {
+		log.Fatal(err)
+	}
+	name, err := [instance.Name](http://instance.name/)(&bind.CallOpts{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	symbol, err := instance.Symbol(&bind.CallOpts{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	decimals, err := instance.Decimals(&bind.CallOpts{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("name: %s\n", name) // "name: Golem Network"
+	fmt.Printf("symbol: %s\n", symbol) // "symbol: GNT"
+	fmt.Printf("decimals: %v\n", decimals) // "decimals: 18"
+	fmt.Printf("wei: %s\n", bal) // "wei: 74605500647408739782407023"
+	fbal := new(big.Float)
+	fbal.SetString(bal.String())
+	value := new(big.Float).Quo(fbal, big.NewFloat(math.Pow10(int(decimals))
+	fmt.Printf("balance: %f", value) // "balance: 74605500.647409"
 }
 ```

@@ -1,10 +1,10 @@
-# NetSepio Smart Contract on Peaq Network
+# Smart Contract For Peaq Network
 
-This repository contains the implementation of the NetSepio smart contract, designed to manage nodes in a decentralized network on the Peaq blockchain.
+This repository contains the implementation of the NetSepio smart contract, designed to manage nodes in a decentralized network on the peaq blockchain.
 
 ## Overview
 
-NetSepio is a smart contract system that enables:
+This smart contract enables:
 
 - Node registration and management
 - Status tracking for network nodes
@@ -115,10 +115,6 @@ The test suite covers:
 
 Run the full test suite:
 
-
-
 ## License
 
-This project is licensed under the MIT License.
-
-his README provides a comprehensive overview of the project, setup instructions, and usage guidelines. It covers all the essential aspects of the smart contract system while maintaining a clear and organized structure.
+This project is licensed under the GNU GPLv3 License.
