@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /// @title NetSepio
-/// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
 
 contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     /// Role definition for admin
