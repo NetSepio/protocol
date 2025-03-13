@@ -44,7 +44,8 @@
     "lint:fix": "solhint 'contracts/**/*.sol' --fix",
     "format": "prettier --write .",
     "coverage": "hardhat coverage",
-    "deploy": "hardhat run scripts/deploy.js"
+    "deploy": "hardhat run scripts/deploy.js",
+    "deploy_mainnet": "hardhat run scripts/deploy.js --network peaq"
   },
   "dependencies": {
     "@chainlink/contracts": "^1.1.1",
