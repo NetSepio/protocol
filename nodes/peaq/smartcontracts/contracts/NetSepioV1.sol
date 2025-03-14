@@ -221,7 +221,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         if (didBytes.length < 14) return false;
 
         // Check prefix "did:netsepio:"
-        return _startsWith(did, "did:netsepio:");
+        return _startsWith(did, "did:peaq:");
     }
 
     /// @notice Helper function to check string prefix
