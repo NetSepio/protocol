@@ -27,8 +27,8 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     mapping(uint256 => Subscription) public subscriptions;
     
     // Mapping for token URIs (active and expired)
-    mapping(uint256 => string) private _activeTokenURIs;
-    mapping(uint256 => string) private _expiredTokenURIs;
+    string public activeTokenURI;
+    string public expiredTokenURI;
     
     // Events
     event SubscriptionMinted(uint256 indexed tokenId, address indexed owner, uint256 expirationTime);
@@ -36,7 +36,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     event SubscriptionBurned(uint256 indexed tokenId, address indexed owner);
     
     /// @notice Contract constructor that sets up admin role
-    constructor() ERC721("ErebrusSubscription", "EREBSUB") {
+    constructor() ERC721("ErebrusTrialSubscription", "ESTF") {
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(OPERATOR_ROLE, ADMIN_ROLE);
         _grantRole(ADMIN_ROLE, _msgSender());
@@ -113,14 +113,11 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     }
     
     /// @notice Sets the token URIs for active and expired states
-    /// @param tokenId The ID of the token
-    /// @param uris Array of URIs [activeURI, expiredURI]
-    function setTokenURI(uint256 tokenId, string[] memory uris) external onlyRole(OPERATOR_ROLE) {
-        _requireOwned(tokenId);
-        require(uris.length == 2, "ErebrusSubscription: Must provide exactly 2 URIs (active and expired)");
-        
-        _activeTokenURIs[tokenId] = uris[0];
-        _expiredTokenURIs[tokenId] = uris[1];
+    /// @param activeURI The URI for the active state
+    /// @param expiredURI The URI for the expired state
+    function setTokenURI(string memory activeURI, string memory expiredURI) external onlyRole(OPERATOR_ROLE) {
+        activeTokenURI = activeURI;
+        expiredTokenURI = expiredURI;
     }
     
     /// @notice Burns a subscription token
@@ -139,9 +136,9 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
         _requireOwned(tokenId);
         
         if (block.timestamp < subscriptions[tokenId].expirationTime) {
-            return _activeTokenURIs[tokenId];
+            return  activeTokenURI;
         } else {
-            return _expiredTokenURIs[tokenId];
+            return expiredTokenURI;
         }
     }
     
