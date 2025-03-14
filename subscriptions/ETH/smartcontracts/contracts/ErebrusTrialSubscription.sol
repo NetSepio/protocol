@@ -17,14 +17,8 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     // Default subscription period (7 days in seconds)
     uint256 public constant DEFAULT_SUBSCRIPTION_PERIOD = 7 * 24 * 60 * 60;
     
-    // Structure to store subscription information
-    struct Subscription {
-        uint256 expirationTime;
-        bool isActive;
-    }
-    
     // Mapping from token ID to subscription info
-    mapping(uint256 => Subscription) public subscriptions;
+    mapping(uint256 => uint256) public expiration;
     
     // Mapping for token URIs (active and expired)
     string public activeTokenURI;
@@ -45,7 +39,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     
     /// @notice Mint a new subscription token with default expiration
     /// @dev Anyone can mint a subscription token
-    function mint(address to) external {
+    function subscriptionStart(address to) external {
         require(to != address(0), "ErebrusSubscription: Invalid address");
         require(balanceOf(to) == 0, "ErebrusSubscription: Address already has a subscription");
         
@@ -56,10 +50,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
         
         uint256 expirationTime = block.timestamp + DEFAULT_SUBSCRIPTION_PERIOD;
         
-        subscriptions[tokenId] = Subscription({
-            expirationTime: expirationTime,
-            isActive: true
-        });
+        expiration[tokenId] = expirationTime;
         
         emit SubscriptionMinted(tokenId, to, expirationTime);
     }
@@ -76,28 +67,18 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
         
         _mint(to, tokenId);
         
-        subscriptions[tokenId] = Subscription({
-            expirationTime: expirationTime,
-            isActive: true
-        });
+        expiration[tokenId] = expirationTime;
         
         emit SubscriptionMinted(tokenId, to, expirationTime);
     }
-    
-    /// @notice Returns the expiration timestamp for a subscription
-    /// @param tokenId The ID of the token to check
-    /// @return The timestamp when the subscription expires
-    function expiration(uint256 tokenId) external view returns (uint256) {
-        _requireOwned(tokenId);
-        return subscriptions[tokenId].expirationTime;
-    }
+
     
     /// @notice Checks if a subscription is still valid
     /// @param tokenId The ID of the token to check
     /// @return True if the subscription is valid, false otherwise
     function isValid(uint256 tokenId) external view returns (bool) {
         _requireOwned(tokenId);
-        return block.timestamp < subscriptions[tokenId].expirationTime;
+        return block.timestamp < expiration[tokenId];
     }
     
     /// @notice Extends the expiration time of a subscription
@@ -107,7 +88,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
         _requireOwned(tokenId);
         require(newExpirationTime > block.timestamp, "ErebrusSubscription: New expiration time must be in the future");
         
-        subscriptions[tokenId].expirationTime = newExpirationTime;
+        expiration[tokenId] = newExpirationTime;
         
         emit SubscriptionExtended(tokenId, newExpirationTime);
     }
@@ -122,12 +103,9 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     
     /// @notice Burns a subscription token
     /// @param tokenId The ID of the token to burn
-    function burn(uint256 tokenId) external {
+    function revokeSubscription(uint256 tokenId) external {
         require(ownerOf(tokenId) == _msgSender(), "ErebrusSubscription: Not the owner of the token");
-        
         _burn(tokenId);
-        subscriptions[tokenId].isActive = false;
-        
         emit SubscriptionBurned(tokenId, _msgSender());
     }
     
@@ -135,7 +113,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         _requireOwned(tokenId);
         
-        if (block.timestamp < subscriptions[tokenId].expirationTime) {
+        if (block.timestamp < expiration[tokenId]) {
             return  activeTokenURI;
         } else {
             return expiredTokenURI;
