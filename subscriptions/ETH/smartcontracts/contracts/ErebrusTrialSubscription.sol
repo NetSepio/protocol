@@ -46,7 +46,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
 
     /// @notice Mint a new subscription token with default expiration
     /// @dev Anyone can mint a subscription token
-    function subscriptionStart(address to) external {
+    function startSubscription(address to) external {
         require(to != address(0), "ErebrusSubscription: Invalid address");
         require(
             balanceOf(to) == 0,
@@ -102,7 +102,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     /// @notice Extends the expiration time of a subscription
     /// @param tokenId The ID of the token to extend
     /// @param newExpirationTime The new expiration timestamp
-    function extend(
+    function extendSubscription(
         uint256 tokenId,
         uint256 newExpirationTime
     ) external onlyRole(OPERATOR_ROLE) {
