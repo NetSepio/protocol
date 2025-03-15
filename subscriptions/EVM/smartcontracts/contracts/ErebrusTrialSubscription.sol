@@ -25,7 +25,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     string public expiredTokenURI;
 
     // Events
-    event SubscriptionMinted(
+    event SubscriptionStart(
         uint256 indexed tokenId,
         address indexed owner,
         uint256 expirationTime
@@ -46,28 +46,28 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
 
     /// @notice Mint a new subscription token with default expiration
     /// @dev Anyone can mint a subscription token
-    function startSubscription(address to) external {
-        require(to != address(0), "ErebrusSubscription: Invalid address");
+    function startSubscription() external {
+        require(_msgSender() != address(0), "ErebrusSubscription: Invalid address");
         require(
-            balanceOf(to) == 0,
+            balanceOf(_msgSender()) == 0,
             "ErebrusSubscription: Address already has a subscription"
         );
 
         counter++;
         uint256 tokenId = counter;
 
-        _mint(to, tokenId);
+        _mint(_msgSender(), tokenId);
 
         uint256 expirationTime = block.timestamp + DEFAULT_SUBSCRIPTION_PERIOD;
 
         expiration[tokenId] = expirationTime;
 
-        emit SubscriptionMinted(tokenId, to, expirationTime);
+        emit SubscriptionStart(tokenId, _msgSender(), expirationTime);
     }
 
     /// @notice Mint a subscription token with custom expiration time
     /// @dev Only operators can delegate mint subscriptions
-    function delegateMint(
+    function delegateStartSubscription(
         address to,
         uint256 expirationTime
     ) external onlyRole(OPERATOR_ROLE) {
@@ -88,9 +88,9 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
 
         expiration[tokenId] = expirationTime;
 
-        emit SubscriptionMinted(tokenId, to, expirationTime);
+        emit SubscriptionStart(tokenId, to, expirationTime);
     }
-
+    
     /// @notice Checks if a subscription is still valid
     /// @param tokenId The ID of the token to check
     /// @return True if the subscription is valid, false otherwise

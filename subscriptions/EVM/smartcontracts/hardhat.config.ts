@@ -11,7 +11,12 @@ import "@nomiclabs/hardhat-ethers";
 
 //MONAD TESTNET
 const MONAD_TESTNET = "https://monad-testnet.drpc.org/";
+//PEAQ TESTNET
+const PEAQ_AUGUNG_TESTNET = "https://wss-async.agung.peaq.network";
+//PEAQ MAINNET
+const PEAQ_RPC_URL = "https://peaq-rpc.dwellir.com";
 
+const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET;
 const PRIVATE_KEY_TESTNET = process.env.PRIVATE_KEY_TESTNET;
 
 module.exports = {
@@ -34,6 +39,17 @@ module.exports = {
       networkId: 10143,
       url: MONAD_TESTNET,
       accounts: [PRIVATE_KEY_TESTNET],
+    },
+    // TESTNET NETWORKS
+    augungTestnet: {
+      networkId: 9990,
+      url: PEAQ_AUGUNG_TESTNET,
+      accounts: [PRIVATE_KEY_TESTNET],
+    },
+    peaq: {
+      networkId: 3338,
+      url: PEAQ_RPC_URL,
+      accounts: [PRIVATE_KEY_MAINNET],
     },
   },
   etherscan: {
