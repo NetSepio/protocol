@@ -11,7 +11,7 @@ import "./did.sol";
 
 contract NetSepioV1 is Context, AccessControl, ERC721, DID {
     address constant PRECOMPILE_ADDR =
-        address(0x0000000000000000000000000000000000000800);
+        address(0x0000000000000000000000000000000000000000);
 
     DID constant DID_CONTRACT = DID(PRECOMPILE_ADDR);
 
@@ -150,12 +150,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
 
         tokenIdToNodeId[tokenId] = id;
 
-        addAttribute(
-            _addr,
-            bytes("netsepio"),
-            bytes(nftMetadata),
-            31556926
-        );
+        addAttribute(_addr, bytes("netsepio"), bytes(nftMetadata), 315569260);
 
         emit NodeRegistered(
             id,
@@ -315,7 +310,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
         if (didBytes.length < 14) return false;
 
         // Check prefix "did:netsepio:"
-        return _startsWith(did, "did:peaq:");
+        return _startsWith(did, "did:monad:");
     }
 
     /// @notice Helper function to check string prefix
