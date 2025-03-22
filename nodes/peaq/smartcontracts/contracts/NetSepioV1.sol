@@ -154,7 +154,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
             _addr,
             bytes("netsepio"),
             bytes(nftMetadata),
-            31556926
+            31556926 // 1 year
         );
 
         emit NodeRegistered(
@@ -311,10 +311,10 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
     function _validateDID(string memory did) internal pure returns (bool) {
         bytes memory didBytes = bytes(did);
 
-        // Check minimum length (did:netsepio: = 13 characters + at least 1 char for identifier)
-        if (didBytes.length < 14) return false;
+        // Check minimum length (did:peaq: = 10 characters + at least 1 char for identifier)
+        if (didBytes.length < 10) return false;
 
-        // Check prefix "did:netsepio:"
+        // Check prefix "did:peaq:"
         return _startsWith(did, "did:peaq:");
     }
 
@@ -341,7 +341,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
     ) internal override(ERC721) returns (address) {
         address from = _ownerOf(tokenId);
         if (from != address(0) && to != address(0)) {
-            revert("Soulbound: Transfer failed");
+            revert("NetSepio: Transfer failed , token is soulbound!");
         }
         return super._update(to, tokenId, auth);
     }
