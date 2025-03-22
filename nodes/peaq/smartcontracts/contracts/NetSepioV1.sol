@@ -341,7 +341,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
     ) internal override(ERC721) returns (address) {
         address from = _ownerOf(tokenId);
         if (from != address(0) && to != address(0)) {
-            revert("NetSepio: Transfer failed , token is soulbound!");
+            revert("NetSepio: Transfer failed, token is soulbound!");
         }
         return super._update(to, tokenId, auth);
     }
