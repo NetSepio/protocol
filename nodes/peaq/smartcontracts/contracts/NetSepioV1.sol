@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.25;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./did.sol";
 
 /// @title NetSepio
 /// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
-
-contract NetSepioV1 is Context, AccessControl, ERC721, DID {
-    address constant PRECOMPILE_ADDR =
-        address(0x0000000000000000000000000000000000000800);
-
-    DID constant DID_CONTRACT = DID(PRECOMPILE_ADDR);
+contract NetSepioV1 is Context, AccessControl, ERC721 {
 
     /// Role definition for admin
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -149,13 +143,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
         });
 
         tokenIdToNodeId[tokenId] = id;
-
-        addAttribute(
-            _addr,
-            bytes("netsepio"),
-            bytes(nftMetadata),
-            31556926 // 1 year
-        );
+        
 
         emit NodeRegistered(
             id,
@@ -202,13 +190,13 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
     }
 
     /// @notice Deactivates a node
-    /// @dev Only the node address who is owner of the SBT can deactivate the node
+    /// @dev Only the wallet address who is owner of the node can deactivate the node
     function deactivateNode(
         string memory nodeId
     ) public onlyWhenNodeExists(nodeId) {
         require(
             ownerOf(nodes[nodeId].tokenId) == _msgSender(),
-            "NetSepio: Not the owner of the SBT"
+            "NetSepio: Not the owner of the node"
         );
         _burn(nodes[nodeId].tokenId);
         nodes[nodeId].status = Status.Deactivated;
@@ -231,91 +219,15 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
         return _tokenURI[tokenId];
     }
 
-    /// @notice Read an attribute for a DID account
-    /// @param did_account The address of the DID account
-    /// @param name The name of the attribute to read
-    function readAttribute(
-        address did_account,
-        bytes memory name
-    ) external view override returns (Attribute memory) {
-        return DID_CONTRACT.readAttribute(did_account, name);
-    }
-
-    /// @notice Add a new attribute to a DID account
-    /// @param did_account The address of the DID account
-    /// @param name The name of the attribute
-    /// @param value The value of the attribute
-    /// @param validity_for The validity period of the attribute
-    function addAttribute(
-        address did_account,
-        bytes memory name,
-        bytes memory value,
-        uint32 validity_for
-    ) public override returns (bool) {
-        require(
-            did_account == _msgSender() || hasRole(OPERATOR_ROLE, _msgSender()),
-            "NetSepio: Not the owner of the DID or the operator"
-        );
-        emit AddAttribute(_msgSender(), did_account, name, value, validity_for);
-        return
-            DID_CONTRACT.addAttribute(did_account, name, value, validity_for);
-    }
-
-    /// @notice Update an existing attribute for a DID account
-    /// @param did_account The address of the DID account
-    /// @param name The name of the attribute to update
-    /// @param value The new value of the attribute
-    /// @param validity_for The new validity period of the attribute
-    function updateAttribute(
-        address did_account,
-        bytes memory name,
-        bytes memory value,
-        uint32 validity_for
-    ) external override returns (bool) {
-        require(
-            did_account == _msgSender() || hasRole(OPERATOR_ROLE, _msgSender()),
-            "NetSepio: Not the owner of the DID or the operator"
-        );
-        emit UpdateAttribute(
-            _msgSender(),
-            did_account,
-            name,
-            value,
-            validity_for
-        );
-        return
-            DID_CONTRACT.updateAttribute(
-                did_account,
-                name,
-                value,
-                validity_for
-            );
-    }
-
-    /// @notice Remove an attribute from a DID account
-    /// @param did_account The address of the DID account
-    /// @param name The name of the attribute to remove
-    function removeAttribute(
-        address did_account,
-        bytes memory name
-    ) external override returns (bool) {
-        require(
-            did_account == _msgSender() || hasRole(OPERATOR_ROLE, _msgSender()),
-            "NetSepio: Not the owner of the DID or the operator"
-        );
-        emit RemoveAttribute(did_account, name);
-        return DID_CONTRACT.removeAttribute(did_account, name);
-    }
-
     /// @notice Validates if the provided DID follows the correct format
     function _validateDID(string memory did) internal pure returns (bool) {
         bytes memory didBytes = bytes(did);
 
-        // Check minimum length (did:peaq: = 10 characters + at least 1 char for identifier)
-        if (didBytes.length < 10) return false;
+        // Check minimum length (did:netsepio: = 14 characters + at least 1 char for identifier)
+        if (didBytes.length < 14) return false;
 
-        // Check prefix "did:peaq:"
-        return _startsWith(did, "did:peaq:");
+        // Check prefix "did:netsepio:"
+        return _startsWith(did, "did:netsepio:");
     }
 
     /// @notice Helper function to check string prefix
@@ -341,7 +253,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721, DID {
     ) internal override(ERC721) returns (address) {
         address from = _ownerOf(tokenId);
         if (from != address(0) && to != address(0)) {
-            revert("NetSepio: Transfer failed, token is soulbound!");
+            revert("NetSepio: Transfer failed, NFT is soulbound!");
         }
         return super._update(to, tokenId, auth);
     }

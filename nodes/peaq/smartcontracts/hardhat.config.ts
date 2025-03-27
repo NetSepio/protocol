@@ -19,7 +19,7 @@ const PRIVATE_KEY_TESTNET = process.env.PRIVATE_KEY_TESTNET;
 
 module.exports = {
   solidity: {
-    version: "0.8.24",
+    version: "0.8.25",
     settings: {
       optimizer: {
         enabled: true,
