@@ -3,11 +3,11 @@ pragma solidity ^0.8.25;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /// @title NetSepio
 /// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
-contract NetSepioV1 is Context, AccessControl, ERC721Enumerable {
+contract NetSepioV1 is Context, AccessControl, ERC721 {
     /// Role definition for admin
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
@@ -245,7 +245,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721Enumerable {
         address to,
         uint256 tokenId,
         address auth
-    ) internal override(ERC721, ERC721Enumerable) returns (address) {
+    ) internal override(ERC721) returns (address) {
         address from = _ownerOf(tokenId);
         if (from != address(0) && to != address(0)) {
             revert("NetSepio: Transfer failed, NFT is soulbound!");
@@ -259,7 +259,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721Enumerable {
     )
         public
         view
-        override(AccessControl, ERC721, ERC721Enumerable)
+        override(AccessControl, ERC721)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);

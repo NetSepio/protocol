@@ -1,6 +1,6 @@
-# Smart Contract For Peaq Network
+# Smart Contract For Monad Network
 
-This repository contains the implementation of the NetSepio smart contract, designed to manage nodes in a decentralized network on the peaq blockchain.
+This repository contains the implementation of the NetSepio smart contract, designed to manage nodes in a decentralized network on the Monad blockchain.
 
 ## Overview
 
@@ -21,7 +21,7 @@ This smart contract enables:
 ## Project Structure
 
 ```markdown
-Peaq/
+Monad/
 ├── smartcontracts/ # Main smart contracts directory
 │ ├── contracts/ # Smart contract source files
 │ │ └── NetSepioV1.sol # Main NetSepio contract implementation
@@ -36,7 +36,7 @@ Peaq/
 
 - Node.js (v12 or higher)
 - Yarn or NPM
-- A Peaq Network account with PEAQ tokens for deployment
+- A Monad Network account with Monad tokens for deployment
 
 ## Setup
 
@@ -44,7 +44,7 @@ Peaq/
 
 ```bash
 git clone https://github.com/NetSepio/protocol.git
-cd nodes/peaq/smartcontracts
+cd nodes/monad/smartcontracts
 ```
 
 2. Install dependencies:
@@ -57,7 +57,6 @@ yarn install
 
 ```bash
 cp .env.example .env
-PRIVATE_KEY_MAINNET=your_mainnet_private_key
 PRIVATE_KEY_TESTNET=your_testnet_private_key
 ```
 
@@ -79,28 +78,17 @@ yarn test
 yarn coverage
 ```
 
-7. Deploy to Agung testnet
+7. Deploy to Monad testnet
 
 ```bash
 npx hardhat run scripts/deploy.js --network augungTestnet
 ```
 
-8. Deploy to Peaq mainnet
-
-```bash
-npx hardhat run scripts/deploy.js --network peaq
-```
-
 ## Networks
 
-- **Peaq Mainnet**
-
-  - RPC URL: https://peaq-rpc.dwellir.com
-  - Network ID: 3338
-
-- **Agung Testnet**
-  - RPC URL: https://rpcpc1-qa.agung.peaq.network
-  - Network ID: 9990
+- **Monad Testnet**
+  - RPC URL: 
+  - Network ID: 
 
 ## Testing
 
