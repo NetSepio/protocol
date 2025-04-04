@@ -43,8 +43,8 @@ Peaq/
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/NetSepio/protocol.git
-cd nodes/peaq/smartcontracts
+git clone https://github.com/NetSepio/Peaq.git
+cd Peaq/smartcontracts
 ```
 
 2. Install dependencies:
