@@ -3,16 +3,17 @@ pragma solidity ^0.8.25;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /// @title NetSepio
 /// @notice Smart contract for managing nodes in the NetSepio network with admin and operator control
 contract NetSepioV1 is Context, AccessControl, ERC721 {
+
     /// Role definition for admin
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
-    uint256 private counter;
+    uint256 public counter;
 
     /// Status codes for nodes
     /// @dev 0: Offline, 1: Online, 2: Maintenance, 4: Deactivated
@@ -22,6 +23,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         Maintenance,
         Deactivated
     }
+
     /// @notice Structure to store node information
     struct Node {
         address addr;
@@ -141,6 +143,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
         });
 
         tokenIdToNodeId[tokenId] = id;
+        
 
         emit NodeRegistered(
             id,
@@ -219,8 +222,10 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
     /// @notice Validates if the provided DID follows the correct format
     function _validateDID(string memory did) internal pure returns (bool) {
         bytes memory didBytes = bytes(did);
+
         // Check minimum length (did:netsepio: = 14 characters + at least 1 char for identifier)
         if (didBytes.length < 14) return false;
+
         // Check prefix "did:netsepio:"
         return _startsWith(did, "did:netsepio:");
     }
@@ -256,12 +261,7 @@ contract NetSepioV1 is Context, AccessControl, ERC721 {
     // The following functions are overrides required by Solidity.
     function supportsInterface(
         bytes4 interfaceId
-    )
-        public
-        view
-        override(AccessControl, ERC721)
-        returns (bool)
-    {
+    ) public view override(AccessControl, ERC721) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
