@@ -9,8 +9,19 @@ import "solidity-coverage";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-//ARBITRUM TESTNET
+// PEAQ MAINNET
+const PEAQ_RPC_URL = "https://peaq-rpc.dwellir.com";
+
+// PEAQ AGUNG TESTNET
+const PEAQ_AUGUNG_TESTNET = "https://wss-async.agung.peaq.network";
+
+//MONAD TESTNET
+const MONAD_TESTNET_RPC = "https://monad-testnet.drpc.org/";
+
+// RISE SEPOLIA
 const RISE_TESTNET_URL = "https://testnet.riselabs.xyz";
+
+const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET;
 const PRIVATE_KEY_TESTNET = process.env.PRIVATE_KEY_TESTNET;
 
 module.exports = {
@@ -29,10 +40,25 @@ module.exports = {
       initialBaseFeePerGas: 0,
     },
     // TESTNET NETWORKS
+    monadTestnet: {
+      networkId: 10143,
+      url: MONAD_TESTNET_RPC,
+      accounts: [PRIVATE_KEY_TESTNET],
+    },
+    augungTestnet: {
+      networkId: 9990,
+      url: PEAQ_AUGUNG_TESTNET,
+      accounts: [PRIVATE_KEY_TESTNET],
+    },
     "rise-sepolia": {
       networkId: 11155931,
       url: RISE_TESTNET_URL,
       accounts: [PRIVATE_KEY_TESTNET],
+    },
+    peaq: {
+      networkId: 3338,
+      url: PEAQ_RPC_URL,
+      accounts: [PRIVATE_KEY_MAINNET],
     },
   },
   etherscan: {
