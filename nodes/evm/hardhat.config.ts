@@ -9,17 +9,24 @@ import "solidity-coverage";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-//PEAQ TESTNET
-const PEAQ_AUGUNG_TESTNET = "https://wss-async.agung.peaq.network";
-//PEAQ MAINNET
+// PEAQ MAINNET
 const PEAQ_RPC_URL = "https://peaq-rpc.dwellir.com";
+
+// PEAQ AGUNG TESTNET
+const PEAQ_AUGUNG_TESTNET = "https://wss-async.agung.peaq.network";
+
+//MONAD TESTNET
+const MONAD_TESTNET_RPC = "https://monad-testnet.drpc.org/";
+
+// RISE SEPOLIA
+const RISE_TESTNET_URL = "https://testnet.riselabs.xyz";
 
 const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET;
 const PRIVATE_KEY_TESTNET = process.env.PRIVATE_KEY_TESTNET;
 
 module.exports = {
   solidity: {
-    version: "0.8.24",
+    version: "0.8.25",
     settings: {
       optimizer: {
         enabled: true,
@@ -33,9 +40,19 @@ module.exports = {
       initialBaseFeePerGas: 0,
     },
     // TESTNET NETWORKS
+    monadTestnet: {
+      networkId: 10143,
+      url: MONAD_TESTNET_RPC,
+      accounts: [PRIVATE_KEY_TESTNET],
+    },
     augungTestnet: {
       networkId: 9990,
       url: PEAQ_AUGUNG_TESTNET,
+      accounts: [PRIVATE_KEY_TESTNET],
+    },
+    "rise-sepolia": {
+      networkId: 11155931,
+      url: RISE_TESTNET_URL,
       accounts: [PRIVATE_KEY_TESTNET],
     },
     peaq: {
@@ -43,6 +60,24 @@ module.exports = {
       url: PEAQ_RPC_URL,
       accounts: [PRIVATE_KEY_MAINNET],
     },
+  },
+  etherscan: {
+    apiKey: {
+      "rise-sepolia": "empty",
+    },
+    customChains: [
+      {
+        network: "rise-sepolia",
+        chainId: 11155931,
+        urls: {
+          apiURL: "https://explorer.testnet.riselabs.xyz/api",
+          browserURL: "https://explorer.testnet.riselabs.xyz",
+        },
+      },
+    ],
+  },
+  sourcify: {
+    enabled: true,
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

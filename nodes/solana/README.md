@@ -2,6 +2,11 @@
 
 A Solana program for managing decentralized network nodes with registration, status management, and checkpoint creation capabilities.
 
+
+
+
+
+
 ## Deployment Details
 
 - **Program ID**: `E67ritmxgYPVP9SbcXp5KQx2s5zrx3JzKPg6bzqgkcEZ`
@@ -113,7 +118,7 @@ To build and test the program:
 1. Install dependencies:
 
 ```bash
-yarn install
+yarn 
 
 ```
 

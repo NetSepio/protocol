@@ -1,6 +1,6 @@
-# Smart Contract For Peaq Network
+# Smart Contract For EVM Networks
 
-This repository contains the implementation of the NetSepio smart contract, designed to manage nodes in a decentralized network on the peaq blockchain.
+This repository contains the implementation of the NetSepio smart contract, designed to manage nodes in a decentralized network on EVM blockchains.
 
 ## Overview
 
@@ -21,7 +21,7 @@ This smart contract enables:
 ## Project Structure
 
 ```markdown
-Peaq/
+evm/
 ├── smartcontracts/ # Main smart contracts directory
 │ ├── contracts/ # Smart contract source files
 │ │ └── NetSepioV1.sol # Main NetSepio contract implementation
@@ -36,7 +36,7 @@ Peaq/
 
 - Node.js (v12 or higher)
 - Yarn or NPM
-- A Peaq Network account with PEAQ tokens for deployment
+- A wallet with sufficient EVM gas tokens for deployment
 
 ## Setup
 
@@ -44,7 +44,7 @@ Peaq/
 
 ```bash
 git clone https://github.com/NetSepio/protocol.git
-cd nodes/peaq/smartcontracts
+cd protocol/evm/smartcontracts
 ```
 
 2. Install dependencies:
@@ -79,13 +79,13 @@ yarn test
 yarn coverage
 ```
 
-7. Deploy to Agung testnet
+7. Deploy to evm testnet
 
 ```bash
 npx hardhat run scripts/deploy.js --network augungTestnet
 ```
 
-8. Deploy to Peaq mainnet
+8. Deploy to evm mainnet
 
 ```bash
 npx hardhat run scripts/deploy.js --network peaq
@@ -94,13 +94,29 @@ npx hardhat run scripts/deploy.js --network peaq
 ## Networks
 
 - **Peaq Mainnet**
-
   - RPC URL: https://peaq-rpc.dwellir.com
   - Network ID: 3338
 
-- **Agung Testnet**
+- **Peaq Agung (Testnet)**
   - RPC URL: https://rpcpc1-qa.agung.peaq.network
   - Network ID: 9990
+
+- **Arbitrum Mainnet**
+  - RPC URL: 
+  - Network ID: 42161
+
+- **Arbitrum Goerli (Testnet)**
+  - RPC URL: 
+  - Network ID: 421613
+
+- **Monad (Testnet)**
+  - RPC URL: 
+  - Network ID: 10143
+
+- **Rise Sepolia (Testnet)**
+  - RPC URL: 
+  - Network ID: 11155931
+
 
 ## Testing
 
