@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /// @title ErebrusTrialSubscription
 /// @notice Smart contract for managing subscription-based Soulbound Tokens (SBTs)
-contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
+contract ErebrusSubscription is Context, AccessControl, ERC721 {
     /// Role definition for admin and operator
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
