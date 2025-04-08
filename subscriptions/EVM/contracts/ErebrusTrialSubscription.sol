@@ -37,7 +37,7 @@ contract ErebrusTrialSubscription is Context, AccessControl, ERC721 {
     event SubscriptionRevoked(uint256 indexed tokenId, address indexed owner);
 
     /// @notice Contract constructor that sets up admin role
-    constructor() ERC721("ErebrusTrialSubscription", "EFTS") {
+    constructor() ERC721("ErebrusSubscription", "ERBS") {
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         _setRoleAdmin(OPERATOR_ROLE, ADMIN_ROLE);
         _grantRole(ADMIN_ROLE, _msgSender());
