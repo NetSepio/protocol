@@ -1,39 +1,25 @@
+const { ChildProcess } = require("child_process");
 const fs = require("fs");
 const { ethers, run, network } = require("hardhat");
 // const jsonContent = JSON.parse(data)
 
-let contractAddress;
-let blockNumber;
-let Verified = false;
-
 async function main() {
-  const erebrusTrialSubscriptionFactory = await hre.ethers.getContractFactory(
-    "ErebrusTrialSubscription"
+  const erebrusSubscriptionFactory = await hre.ethers.getContractFactory(
+    "ErebrusSubscription"
   );
-  const erebrusTrialSubscription =
-    await erebrusTrialSubscriptionFactory.deploy();
+  const erebrusSubscription = await erebrusSubscriptionFactory.deploy();
 
-  await erebrusTrialSubscription.deployed();
+  await erebrusSubscription.deployed();
   console.log(
-    "ErebrusTrialSubscription Contract Deployed to:",
-    erebrusTrialSubscription.address
+    "ErebrusSubscription Contract Deployed to:",
+    erebrusSubscription.address
   );
 
-  let chainId;
-
-  if (network.config.chainId != undefined) {
-    chainId = network.config.chainId;
-  } else {
-    chainId = network.config.networkId;
+  if (network.name != "hardhat") {
+    console.log("Waiting for block confirmations...");
+    await erebrusSubscription.deployTransaction.wait(6);
+    await verify(erebrusSubscription.address, []);
   }
-
-  await verify(erebrusTrialSubscription.address, []);
-
-  console.log(`The chainId is ${chainId}`);
-  const data = { chainId, contractAddress, Verified, blockNumber };
-  const jsonString = JSON.stringify(data);
-  // Log the JSON string
-  console.log(jsonString);
 }
 
 // async function verify(contractAddress, args) {

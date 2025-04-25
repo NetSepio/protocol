@@ -5,14 +5,20 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-netsepio = "3FUaNXDHg6NVPUJQLNXCfodArZq3GuFRxdrizgEuuVCj"
+netsepio = "7JD74hNXHTYBMw9FMfduY9ArRf8bTFdsvWJQFmKyAGGj"
+mpl_core_program = "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+
+# Add MPL Core program for local testing
+[[test.genesis]]
+address = "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+program = "tests/programs/mpl-core.so"

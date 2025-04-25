@@ -8,7 +8,9 @@ use mpl_core::{
     ID as MPL_CORE_ID,
 };
 
-declare_id!("3FUaNXDHg6NVPUJQLNXCfodArZq3GuFRxdrizgEuuVCj");
+
+declare_id!("7JD74hNXHTYBMw9FMfduY9ArRf8bTFdsvWJQFmKyAGGj");
+
 
 pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 
@@ -65,7 +67,8 @@ pub mod netsepio {
         node.location = location;
         node.metadata = metadata;
         node.owner = owner;
-        node.status = NodeStatus::ONLINE; // Using enum variant instead of 1
+        node.status = NodeStatus::OFFLINE;
+        node.checkpoint_data = String::new();
 
         // emit config, metadata
         emit!(NodeRegistered {
@@ -93,7 +96,6 @@ pub mod netsepio {
             .authority(Some(&ctx.accounts.authority.to_account_info()))
             .payer(&ctx.accounts.payer.to_account_info())
             .owner(Some(&ctx.accounts.owner.to_account_info()))
-            .update_authority(Some(&ctx.accounts.authority.to_account_info()))
             .system_program(&ctx.accounts.system_program.to_account_info())
             .data_state(DataState::AccountState)
             .name(name)
@@ -157,7 +159,6 @@ pub mod netsepio {
             .collection(Some(&ctx.accounts.collection.to_account_info()))
             .authority(Some(&ctx.accounts.authority.to_account_info()))
             .payer(&ctx.accounts.payer.to_account_info())
-            .authority(Some(&ctx.accounts.authority.to_account_info()))
             .system_program(&ctx.accounts.system_program.to_account_info())
             .new_uri(uri)
             .invoke()?;
@@ -170,17 +171,16 @@ pub mod netsepio {
         node_id: String,
         data: String,
     ) -> Result<()> {
-        let checkpoint = &mut ctx.accounts.checkpoint;
-        checkpoint.data = data;
+        let node = &mut ctx.accounts.node;
+        node.checkpoint_data = data;
 
         emit!(CheckpointCreated {
-            node_id: node_id.clone(),
-            data: checkpoint.data.clone(),
+            node_id,
+            data: node.checkpoint_data.clone(),
         });
 
         Ok(())
     }
-
 }
 
 // Account structure for creating a collection
@@ -221,9 +221,6 @@ pub struct MintNft<'info> {
 
     /// CHECK: Owner of the asset (recipient of the NFT)
     pub owner: UncheckedAccount<'info>,
-
-    /// CHECK: Update authority for the NFT (typically same as authority)
-    pub update_authority: UncheckedAccount<'info>,
 
     #[account(mut)]
     /// CHECK: We don't validate the collection account here as mpl-core will do it
@@ -300,7 +297,7 @@ pub struct UpdateNode<'info> {
         mut,
         seeds = [b"erebrus", node_id.as_bytes()],
         bump,
-        constraint = payer.key() == ADMIN_KEY.key() @ ErrorCode::NotNodeOwner
+        constraint = payer.key() == ADMIN_KEY.key() @ ErrorCode::NotAuthorized
     )]
     pub node: Account<'info, Node>,
     #[account(mut)]
@@ -312,18 +309,10 @@ pub struct UpdateNode<'info> {
 #[instruction(node_id: String)]
 pub struct CreateCheckpoint<'info> {
     #[account(
-        init,
-        payer = payer,
-        space = ANCHOR_DISCRIMINATOR_SIZE + Checkpoint::INIT_SPACE,
-        seeds = [b"erebrus", payer.key().as_ref(), node_id.as_bytes()],
-        bump
-    )]
-    pub checkpoint: Account<'info, Checkpoint>,
-
-    #[account(
-        seeds = [b"erebrus", payer.key().as_ref(), node_id.as_bytes()],
+        mut,
+        seeds = [b"erebrus", node_id.as_bytes()],
         bump,
-        constraint = node.owner == payer.key() @ ErrorCode::NotNodeOwner
+        constraint = node.owner == payer.key() || payer.key() == ADMIN_KEY.key() @ ErrorCode::NotAuthorized
     )]
     pub node: Account<'info, Node>,
 
@@ -332,7 +321,6 @@ pub struct CreateCheckpoint<'info> {
 
     pub system_program: Program<'info, System>,
 }
-
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy)]
 pub enum NodeStatus {
@@ -368,15 +356,8 @@ pub struct Node {
     #[max_len(50)]
     pub owner: Pubkey,
     pub status: NodeStatus,
-}
-
-#[account]
-#[derive(InitSpace)]
-pub struct Checkpoint {
-    #[max_len(500)]
-    pub node_id: String,
-    #[max_len(1000)]
-    pub data: String,
+    #[max_len(200)]
+    pub checkpoint_data: String,
 }
 
 #[event]
@@ -423,4 +404,6 @@ pub enum ErrorCode {
     NotNodeOwner,
     #[msg("Invalid node status value")]
     InvalidNodeStatus,
+    #[msg("Not authorized")]
+    NotAuthorized,
 }

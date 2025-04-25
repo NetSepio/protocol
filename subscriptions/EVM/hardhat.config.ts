@@ -9,19 +9,20 @@ import "solidity-coverage";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 
-//MONAD TESTNET
-const MONAD_TESTNET_RPC = "https://monad-testnet.drpc.org/";
-//PEAQ TESTNET
-const AUGUNG_RPC = "https://wss-async.agung.peaq.network";
-// BASE TESTNET
+// TESTNET
 const BASE_SEPOLIA_RPC =
   process.env.BASE_SEPOLIA_RPC || "wss://base-sepolia-rpc.publicnode.com";
+const ARBITRUM_SEPOLIA_RPC =
+  process.env.ARBITRUM_SEPOLIA_RPC ||
+  "wss://arbitrum-sepolia-rpc.publicnode.com";
+const AUGUNG_RPC = "https://wss-async.agung.peaq.network";
 
-//BASE MAINNET
+// MAINNET
 const BASE_MAINNET_RPC = "https://mainnet.base.org";
-//PEAQ MAINNET
+const ARBITRUM_MAINNET_RPC = "https://arbitrum-mainnet.infura.io/v3/";
 const PEAQ_RPC_URL = "https://peaq-rpc.dwellir.com";
 
+// PRIVATE KEYS
 const PRIVATE_KEY_MAINNET = process.env.PRIVATE_KEY_MAINNET;
 const PRIVATE_KEY_TESTNET = process.env.PRIVATE_KEY_TESTNET;
 
@@ -41,9 +42,14 @@ module.exports = {
       initialBaseFeePerGas: 0,
     },
     // TESTNET NETWORKS
-    monadTestnet: {
-      networkId: 10143,
-      url: MONAD_TESTNET_RPC,
+    baseSepolia: {
+      networkId: 84532,
+      url: BASE_SEPOLIA_RPC,
+      accounts: [PRIVATE_KEY_TESTNET],
+    },
+    arbitrumSepolia: {
+      networkId: 421614,
+      url: ARBITRUM_SEPOLIA_RPC,
       accounts: [PRIVATE_KEY_TESTNET],
     },
     augungTestnet: {
@@ -51,11 +57,7 @@ module.exports = {
       url: AUGUNG_RPC,
       accounts: [PRIVATE_KEY_TESTNET],
     },
-    baseSepolia: {
-      networkId: 84532,
-      url: BASE_SEPOLIA_RPC,
-      accounts: [PRIVATE_KEY_TESTNET],
-    },
+
     // MAINNET NETWORKS
     baseMainnet: {
       networkId: 8453,
@@ -69,12 +71,13 @@ module.exports = {
     },
   },
   etherscan: {
-    enabled: false,
+    apiKey: {
+      baseSepolia: process.env.BASESCAN_API_KEY,
+      arbitrumSepolia: process.env.ARBITRUMSCAN_API_KEY,
+    },
   },
   sourcify: {
     enabled: true,
-    blockExplorerUrl: "https://testnet.monadexplorer.com",
-    blockExplorerApiUrl: "https://sourcify-api-monad.blockvision.org",
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

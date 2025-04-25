@@ -1,10 +1,5 @@
 const fs = require("fs");
 const { ethers, run, network } = require("hardhat");
-// const jsonContent = JSON.parse(data)
-
-let contractAddress;
-let blockNumber;
-let Verified = false;
 
 async function main() {
   const netsepioFactory = await hre.ethers.getContractFactory("NetSepioV1");
@@ -13,25 +8,30 @@ async function main() {
   await netsepio.deployed();
 
   console.log("Netsepio Contract Deployed to:", netsepio.address);
-  contractAddress = netsepio.address;
-  blockNumber = netsepio.provider._maxInternalBlockNumber;
-
-  
-
-  let chainId;
-
-  if (network.config.chainId != undefined) {
-    chainId = network.config.chainId;
-  } else {
-    chainId = network.config.networkId;
+  if (network.name != "hardhat") {
+    console.log("Waiting for block confirmations...");
+    await netsepio.deployTransaction.wait(6);
+    await verify(netsepio.address, []);
   }
-
-  console.log(`The chainId is ${chainId}`);
-  const data = { chainId, contractAddress, Verified, blockNumber };
-  const jsonString = JSON.stringify(data);
-  // Log the JSON string
-  console.log(jsonString);
 }
+
+// async function verify(contractAddress, args) {
+const verify = async (contractAddress, args) => {
+  console.log("Verifying contract...");
+  try {
+    await run("verify:verify", {
+      address: contractAddress,
+      constructorArguments: args,
+    });
+    Verified = true;
+  } catch (e) {
+    if (e.message.toLowerCase().includes("already verified")) {
+      console.log("Already Verified!");
+    } else {
+      console.log(e);
+    }
+  }
+};
 
 // main
 main()
