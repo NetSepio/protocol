@@ -213,3 +213,61 @@ anchor test
 ```
 
 - This automatically starts and stops a local validator for the duration of your tests
+
+## Loading BPF Programs Directly into solana-test-validator
+
+To load your program directly into a local validator without using Anchor:
+
+1. Start solana-test-validator with your program:
+
+```bash
+solana-test-validator --bpf-program <PROGRAM_ID> <PATH_TO_PROGRAM_SO_FILE>
+```
+
+For example, to load the MPL CORE program:
+
+```bash
+solana-test-validator --bpf-program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d tests/programs/mpl-core.so
+```
+
+2. You can load multiple programs at once:
+
+```bash
+solana-test-validator \
+  --bpf-program 39vVDTvVqdTkXLZujJuA11SS1ohmNH2JLcuXZVqEyFZx target/deploy/netsepio.so \
+  --bpf-program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d tests/programs/mpl-core.so
+```
+
+3. To reset the validator's ledger but keep your programs loaded:
+
+```bash
+solana-test-validator \
+  --bpf-program 39vVDTvVqdTkXLZujJuA11SS1ohmNH2JLcuXZVqEyFZx target/deploy/netsepio.so \
+  --reset
+```
+
+This approach is useful for direct testing with the Solana CLI or custom clients without using Anchor's test framework.
+
+### Loading MPL Core
+
+MPL Core is required for Netsepio's NFT functionality. To use it:
+
+1. Download the MPL Core program from mainnet:
+
+```bash
+solana program dump -u mainnet-beta CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d tests/programs/mpl-core.so
+```
+
+2. Create the programs directory if needed:
+
+```bash
+mkdir -p tests/programs
+```
+
+3. Add MPL Core to your Anchor.toml:
+
+```toml
+[[test.genesis]]
+address = "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+program = "tests/programs/mpl-core.so"
+```

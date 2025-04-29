@@ -3,14 +3,14 @@ use anchor_lang::Space;
 use solana_program::pubkey::Pubkey;
 
 use mpl_core::{
-    instructions::{CreateCollectionV2CpiBuilder, CreateV1CpiBuilder, UpdateV2CpiBuilder},
-    types::{DataState, FreezeDelegate, Plugin, PluginAuthorityPair},
+    instructions::{
+        BurnV1CpiBuilder, CreateCollectionV2CpiBuilder, CreateV1CpiBuilder, UpdateV2CpiBuilder,
+    },
+    types::{DataState, FreezeDelegate, Plugin, PluginAuthority, PluginAuthorityPair},
     ID as MPL_CORE_ID,
 };
 
-
 declare_id!("7JD74hNXHTYBMw9FMfduY9ArRf8bTFdsvWJQFmKyAGGj");
-
 
 pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 
@@ -19,6 +19,8 @@ pub const ADMIN_KEY: Pubkey =
 
 #[program]
 pub mod netsepio {
+    use mpl_core::instructions::UpdatePluginV1CpiBuilder;
+
     use super::*;
 
     // Instruction to create a collection
@@ -67,6 +69,7 @@ pub mod netsepio {
         node.location = location;
         node.metadata = metadata;
         node.owner = owner;
+        node.asset = None; // intialize to own an nft
         node.status = NodeStatus::OFFLINE;
         node.checkpoint_data = String::new();
 
@@ -86,8 +89,13 @@ pub mod netsepio {
         Ok(())
     }
 
-    pub fn mint_nft(ctx: Context<MintNft>, name: String, uri: String) -> Result<()> {
-        msg!("Creating Soulbound NFT: {}", name);
+    pub fn mint_nft(
+        ctx: Context<MintNft>,
+        node_id: String,
+        name: String,
+        uri: String,
+    ) -> Result<()> {
+        msg!("Creating Soulbound NFT: {} for node {}", name, node_id);
 
         // Use the CreateV1CpiBuilder with the exact plugin format requested
         CreateV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
@@ -102,11 +110,15 @@ pub mod netsepio {
             .uri(uri)
             .plugins(vec![PluginAuthorityPair {
                 plugin: Plugin::FreezeDelegate(FreezeDelegate { frozen: true }),
-                authority: None,
+                authority: Some(PluginAuthority::Address {
+                    address: ctx.accounts.owner.key(),
+                }),
             }])
             .invoke()?;
-
         msg!("Soulbound NFT created successfully!");
+
+        let node = &mut ctx.accounts.node;
+        node.asset = Some(ctx.accounts.asset.key()); // Store the NFT's Pubkey in node.asset
 
         Ok(())
     }
@@ -114,6 +126,23 @@ pub mod netsepio {
     // Deactivates a node by closing its PDA and returning the lamports to the user //
     pub fn deactivate_node(ctx: Context<DeactivateNode>, node_id: String) -> Result<()> {
         let node = &ctx.accounts.node;
+
+        UpdatePluginV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
+            .asset(&ctx.accounts.asset.to_account_info())
+            .collection(Some(&ctx.accounts.collection.to_account_info()))
+            .payer(&ctx.accounts.payer.to_account_info())
+            .authority(Some(&ctx.accounts.payer.to_account_info())) // Use payer instead of owner
+            .system_program(&ctx.accounts.system_program.to_account_info())
+            .plugin(Plugin::FreezeDelegate(FreezeDelegate { frozen: false }))
+            .invoke()?;
+
+        //Burn the NFT
+        BurnV1CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
+            .asset(&ctx.accounts.asset.to_account_info())
+            .collection(Some(&ctx.accounts.collection.to_account_info()))
+            .payer(&ctx.accounts.payer.to_account_info())
+            .authority(Some(&ctx.accounts.payer.to_account_info())) // Payer is the owner and signer
+            .invoke()?;
 
         emit!(NodeDeactivated {
             id: node_id,
@@ -147,13 +176,7 @@ pub mod netsepio {
         Ok(())
     }
 
-    pub fn update_node_metadata(
-        ctx: Context<UpdateNodeMetadata>,
-        name: String,
-        uri: String,
-    ) -> Result<()> {
-        msg!("Updating Node Metadata: {}", name);
-
+    pub fn update_node_metadata(ctx: Context<UpdateNodeMetadata>, uri: String) -> Result<()> {
         UpdateV2CpiBuilder::new(&ctx.accounts.mpl_core_program.to_account_info())
             .asset(&ctx.accounts.asset.to_account_info())
             .collection(Some(&ctx.accounts.collection.to_account_info()))
@@ -206,6 +229,7 @@ pub struct CreateCollection<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(node_id: String)]
 pub struct MintNft<'info> {
     /// CHECK: This is a static account that won't sign
     #[account(mut,
@@ -218,6 +242,13 @@ pub struct MintNft<'info> {
 
     #[account(mut)]
     pub asset: Signer<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"erebrus", node_id.as_bytes()],
+        bump,
+    )]
+    pub node: Account<'info, Node>,
 
     /// CHECK: Owner of the asset (recipient of the NFT)
     pub owner: UncheckedAccount<'info>,
@@ -261,8 +292,25 @@ pub struct DeactivateNode<'info> {
         constraint = node.owner == payer.key() @ ErrorCode::NotNodeOwner
     )]
     pub node: Account<'info, Node>,
+
     #[account(mut)]
     pub payer: Signer<'info>,
+
+    #[account(
+        mut,
+        constraint = asset.key() == node.asset.ok_or(ErrorCode::InvalidAsset)? @ ErrorCode::InvalidAsset
+    )]
+    /// CHECK: The NFT asset to burn, validated by mpl-core
+    pub asset: UncheckedAccount<'info>,
+
+    #[account(mut)]
+    /// CHECK: The collection the NFT belongs to, validated by mpl-core
+    pub collection: UncheckedAccount<'info>,
+
+    #[account(address = MPL_CORE_ID)]
+    /// CHECK: This is the MPL Core program
+    pub mpl_core_program: UncheckedAccount<'info>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -355,6 +403,7 @@ pub struct Node {
     pub metadata: String,
     #[max_len(50)]
     pub owner: Pubkey,
+    pub asset: Option<Pubkey>,
     pub status: NodeStatus,
     #[max_len(200)]
     pub checkpoint_data: String,
@@ -406,4 +455,6 @@ pub enum ErrorCode {
     InvalidNodeStatus,
     #[msg("Not authorized")]
     NotAuthorized,
+    #[msg("Provided asset does not match node's asset")]
+    InvalidAsset, // New error for asset mismatch
 }
