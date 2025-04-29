@@ -1,0 +1,755 @@
+{
+  "address": "7JD74hNXHTYBMw9FMfduY9ArRf8bTFdsvWJQFmKyAGGj",
+  "metadata": {
+    "name": "netsepio",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "create_checkpoint",
+      "discriminator": [
+        87,
+        58,
+        2,
+        214,
+        112,
+        193,
+        234,
+        5
+      ],
+      "accounts": [
+        {
+          "name": "node",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  114,
+                  101,
+                  98,
+                  114,
+                  117,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "node_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "node_id",
+          "type": "string"
+        },
+        {
+          "name": "data",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "create_collection",
+      "discriminator": [
+        156,
+        251,
+        92,
+        54,
+        233,
+        2,
+        16,
+        82
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "collection",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mpl_core_program",
+          "address": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "deactivate_node",
+      "discriminator": [
+        242,
+        185,
+        114,
+        146,
+        22,
+        248,
+        23,
+        157
+      ],
+      "accounts": [
+        {
+          "name": "node",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  114,
+                  101,
+                  98,
+                  114,
+                  117,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "node_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "asset",
+          "writable": true
+        },
+        {
+          "name": "collection",
+          "writable": true
+        },
+        {
+          "name": "mpl_core_program",
+          "address": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "node_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "mint_nft",
+      "discriminator": [
+        211,
+        57,
+        6,
+        167,
+        15,
+        219,
+        35,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "asset",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "node",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  114,
+                  101,
+                  98,
+                  114,
+                  117,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "node_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner"
+        },
+        {
+          "name": "collection",
+          "writable": true
+        },
+        {
+          "name": "mpl_core_program",
+          "address": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "node_id",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "register_node",
+      "discriminator": [
+        102,
+        85,
+        117,
+        114,
+        194,
+        188,
+        211,
+        168
+      ],
+      "accounts": [
+        {
+          "name": "node",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  114,
+                  101,
+                  98,
+                  114,
+                  117,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "node_type",
+          "type": "string"
+        },
+        {
+          "name": "config",
+          "type": "string"
+        },
+        {
+          "name": "ipaddress",
+          "type": "string"
+        },
+        {
+          "name": "region",
+          "type": "string"
+        },
+        {
+          "name": "location",
+          "type": "string"
+        },
+        {
+          "name": "metadata",
+          "type": "string"
+        },
+        {
+          "name": "owner",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_node_metadata",
+      "discriminator": [
+        23,
+        161,
+        197,
+        108,
+        225,
+        49,
+        177,
+        230
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "asset",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "collection",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mpl_core_program",
+          "address": "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "update_node_status",
+      "discriminator": [
+        89,
+        45,
+        26,
+        252,
+        193,
+        158,
+        117,
+        24
+      ],
+      "accounts": [
+        {
+          "name": "node",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  114,
+                  101,
+                  98,
+                  114,
+                  117,
+                  115
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "node_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "node_id",
+          "type": "string"
+        },
+        {
+          "name": "new_status",
+          "type": "u8"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Node",
+      "discriminator": [
+        208,
+        53,
+        1,
+        3,
+        49,
+        122,
+        180,
+        49
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "CheckpointCreated",
+      "discriminator": [
+        200,
+        12,
+        94,
+        5,
+        155,
+        3,
+        67,
+        232
+      ]
+    },
+    {
+      "name": "CheckpointUpdated",
+      "discriminator": [
+        143,
+        94,
+        126,
+        114,
+        142,
+        212,
+        54,
+        152
+      ]
+    },
+    {
+      "name": "NodeDeactivated",
+      "discriminator": [
+        74,
+        15,
+        22,
+        250,
+        74,
+        89,
+        202,
+        244
+      ]
+    },
+    {
+      "name": "NodeRegistered",
+      "discriminator": [
+        15,
+        57,
+        183,
+        59,
+        93,
+        55,
+        157,
+        195
+      ]
+    },
+    {
+      "name": "NodeStatusUpdated",
+      "discriminator": [
+        30,
+        47,
+        142,
+        210,
+        128,
+        144,
+        113,
+        115
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NotNodeOwner",
+      "msg": "Not node owner"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidNodeStatus",
+      "msg": "Invalid node status value"
+    },
+    {
+      "code": 6002,
+      "name": "NotAuthorized",
+      "msg": "Not authorized"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidAsset",
+      "msg": "Provided asset does not match node's asset"
+    }
+  ],
+  "types": [
+    {
+      "name": "CheckpointCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "node_id",
+            "type": "string"
+          },
+          {
+            "name": "data",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CheckpointUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "node_id",
+            "type": "string"
+          },
+          {
+            "name": "data",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Node",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "node_type",
+            "type": "string"
+          },
+          {
+            "name": "config",
+            "type": "string"
+          },
+          {
+            "name": "ipaddress",
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "name": "location",
+            "type": "string"
+          },
+          {
+            "name": "metadata",
+            "type": "string"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "asset",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "status",
+            "type": {
+              "defined": {
+                "name": "NodeStatus"
+              }
+            }
+          },
+          {
+            "name": "checkpoint_data",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NodeDeactivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "owner_address",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NodeRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "node_type",
+            "type": "string"
+          },
+          {
+            "name": "config",
+            "type": "string"
+          },
+          {
+            "name": "ipaddress",
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "type": "string"
+          },
+          {
+            "name": "location",
+            "type": "string"
+          },
+          {
+            "name": "metadata",
+            "type": "string"
+          },
+          {
+            "name": "owner",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NodeStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "OFFLINE"
+          },
+          {
+            "name": "ONLINE"
+          },
+          {
+            "name": "MAINTENANCE"
+          }
+        ]
+      }
+    },
+    {
+      "name": "NodeStatusUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string"
+          },
+          {
+            "name": "new_status",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}
