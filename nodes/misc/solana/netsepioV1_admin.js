@@ -24,7 +24,7 @@ import idl from "./idl.json" with { type: "json" };
 
   // Add this function at the top of your file
 function loadOrCreateKeypair() {
-  const keypairPath = './Keypair.json';
+  const keypairPath = './AdminKeypair.json';
   
   try {
     // Check if Keypair.json exists
@@ -47,9 +47,64 @@ function loadOrCreateKeypair() {
   }
 }
 
+async function loadorCreateKeypairCollection(program, wallet) {
+const keypairPath = './CollectionKeypair.json';
+  try {
+    // Check if Keypair.json exists
+    if (fs.existsSync(keypairPath)) {
+      const keypairData = JSON.parse(fs.readFileSync(keypairPath));
+      return Keypair.fromSecretKey(new Uint8Array(keypairData));
+    }
+    
+    // If file doesn't exist, create new keypair
+    const newKeypair = Keypair.generate();
+    
+    // Save the new keypair to file
+    fs.writeFileSync(keypairPath, JSON.stringify(Array.from(newKeypair.secretKey)));
+    console.log("New keypair created and saved to Keypair.json");
+    
+    return newKeypair;
+  } catch (error) {
+    console.error("Error handling keypair:", error);
+    throw error;
+  }  
+  
+}
+
+  // Load or create asset keypair and save to AssetsKeypair.json
+async function loadOrCreateAssetKeypair(nodeId) {
+  const keypairPath = "./AssetsKeypair.json";
+  try {
+    let keypairJson = { assets: {} };
+    if (fs.existsSync(keypairPath)) {
+      keypairJson = JSON.parse(fs.readFileSync(keypairPath));
+    }
+
+    let assetKeypair;
+    if (keypairJson.assets[nodeId]) {
+      assetKeypair = Keypair.fromSecretKey(new Uint8Array(keypairJson.assets[nodeId]));
+      console.log(`Loaded asset keypair for node ${nodeId}:`, assetKeypair.publicKey.toString());
+    } else {
+      assetKeypair = Keypair.generate();
+      console.log(`Generated new asset keypair for node ${nodeId}:`, assetKeypair.publicKey.toString());
+
+      // Save to AssetsKeypair.json
+      keypairJson.assets[nodeId] = Array.from(assetKeypair.secretKey);
+      fs.writeFileSync(keypairPath, JSON.stringify(keypairJson, null, 2));
+      console.log(`Saved asset keypair for node ${nodeId} to AssetsKeypair.json`);
+    }
+    
+    return assetKeypair;
+  } catch (error) {
+    console.error(`Error handling asset keypair for node ${nodeId}:`, error);
+    throw error;
+  }
+}
+
+
   async function createCollection(program, wallet, collectionName, collectionUri) {
     // Generate a keypair for the collection account
-    const collectionKeypair = Keypair.generate();
+    const collectionKeypair = loadorCreateKeypairCollection(program, wallet);
 
     // TEST CASE 1: Calling Collection through admin
     console.log("Creating collection...");
@@ -94,38 +149,37 @@ function loadOrCreateKeypair() {
   }
 
   async function mintNFT(program, wallet, args) {
-    console.log("The minting nft starts now...");
-    const assetKeypair = Keypair.generate();
-  
     try {
-        if (args.length !== 4) {
+        if (args.length !== 5) {
           throw new Error(
-              "Usage: node netsepiov1.js mintNFT <nodeId> <nftName> <nftUri> <owner>"
+              "Usage: node netsepiov1.js mintNFT <nodeId> <nftName> <nftUri> <owner> <collectionKey>"
             );
           }
-
         const [
           nodeId,
           name,
           uri,
-          owner
+          owner,
+          collectionKey
         ] = args;
-    
-      const tx = await program.methods
-        .mintNft(nodeId, name, uri)
-        .accountsPartial({
-          authority: wallet.publicKey,
-          payer: wallet.publicKey,
-          asset: assetKeypair.publicKey,
-          owner: owner.publicKey,
-          collection: collectionKeypair.publicKey,
-          mplCoreProgram: new PublicKey(
-            "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
-          ),
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([assetKeypair])
-        .rpc();
+
+        const ownerPubkey = new PublicKey(owner);
+        const assetKeypair = await loadOrCreateAssetKeypair(nodeId);
+
+        console.log("The minting nft starts now...");
+        const tx = await program.methods
+          .mintNft(nodeId, name, uri)
+          .accountsPartial({
+            authority: wallet.publicKey,
+            payer: wallet.publicKey,
+            asset: assetKeypair.publicKey,
+            owner: ownerPubkey,
+            collection: new PublicKey(collectionKey),
+            mplCoreProgram: new PublicKey("CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"),
+            systemProgram: SystemProgram.programId,
+          })
+          .signers([assetKeypair])
+          .rpc();
 
       const summary = {
           action: "mintNFT",
@@ -275,12 +329,28 @@ function loadOrCreateKeypair() {
       // Load or create keypair
       const wallet = loadOrCreateKeypair();
       // Check wallet balance
-      console.log("Using wallet address:", wallet.publicKey.toString());
-
       const balance = await checkBalance(connection, wallet.publicKey);
       console.log("Wallet balance:", balance, "SOL");
   
-      
+      if ((balance < 1) && (connection.rpcEndpoint.includes("devnet") || connection.rpcEndpoint.includes("testnet"))) {
+         // Fund the keypair with SOL
+        const airdropAmount = 1 * LAMPORTS_PER_SOL;
+        const airdropTx = await connection.requestAirdrop(
+          wallet.publicKey,
+          airdropAmount
+        );
+        await connection.confirmTransaction(airdropTx);
+
+        // Check and log the balance
+        const balanceInLamports = await connection.getBalance(
+          wallet.publicKey
+        );
+        const balanceInSol = balanceInLamports / LAMPORTS_PER_SOL;
+        console.log(
+          `Keypair balance: ${balanceInSol} SOL (${balanceInLamports} lamports)`
+        );
+      }
+
       // Setup provider
       const provider = new AnchorProvider(
         connection,
