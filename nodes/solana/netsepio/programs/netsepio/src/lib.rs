@@ -10,7 +10,7 @@ use mpl_core::{
     ID as MPL_CORE_ID,
 };
 
-declare_id!("7JD74hNXHTYBMw9FMfduY9ArRf8bTFdsvWJQFmKyAGGj");
+declare_id!("39vVDTvVqdTkXLZujJuA11SS1ohmNH2JLcuXZVqEyFZx");
 
 pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 
@@ -22,6 +22,14 @@ pub mod netsepio {
     use mpl_core::instructions::UpdatePluginV1CpiBuilder;
 
     use super::*;
+
+    pub fn intialize_global_config(ctx: Context<InitializeGlobalConfig>) -> Result<()> {
+        let global_config = &mut ctx.accounts.global_config;
+        global_config.is_collection_intialization = CollectionStatus::NOTINITIALIZED;
+        global_config.collection_mint = None;
+        global_config.collection_metadata = None;
+        Ok(())
+    }
 
     // Instruction to create a collection
     pub fn create_collection(
@@ -38,8 +46,14 @@ pub mod netsepio {
             .update_authority(Some(&ctx.accounts.authority.to_account_info()))
             .system_program(&ctx.accounts.system_program.to_account_info())
             .name(name)
-            .uri(uri)
+            .uri(uri.clone())
             .invoke()?;
+
+        // Update the global config
+        let global_config = &mut ctx.accounts.global_config;
+        global_config.is_collection_intialization = CollectionStatus::INITIALIZED;
+        global_config.collection_mint = Some(ctx.accounts.collection.key());
+        global_config.collection_metadata = Some(uri);
 
         msg!("Collection created successfully!");
         Ok(())
@@ -204,11 +218,58 @@ pub mod netsepio {
 
         Ok(())
     }
+
+    // Force deactivates a node without requiring NFT - user only
+    // This is used when the user wants to deactivate their node but doesn't have the NFT
+    // This is a rare case and should be used with caution
+    pub fn force_deactivate_node(ctx: Context<ForceDeactivateNode>, node_id: String) -> Result<()> {
+        let node = &ctx.accounts.node;
+
+        // Verify the node exists and is owned by the payer
+        require!(
+            node.owner == ctx.accounts.payer.key(),
+            ErrorCode::NotNodeOwner
+        );
+
+        // Emit event before closing the account
+        emit!(NodeDeactivated {
+            id: node_id,
+            owner_address: node.owner,
+        });
+
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct InitializeGlobalConfig<'info> {
+    #[account(
+        init,
+        payer = payer,
+        space = ANCHOR_DISCRIMINATOR_SIZE + GlobalConfig::INIT_SPACE,
+        seeds = [b"netsepio", ADMIN_KEY.key().as_ref()],
+        bump,
+        constraint = payer.key() == ADMIN_KEY.key() @ ErrorCode::NotAuthorized
+    )]
+    pub global_config: Account<'info, GlobalConfig>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
 }
 
 // Account structure for creating a collection
 #[derive(Accounts)]
 pub struct CreateCollection<'info> {
+    #[account(
+        mut,
+        seeds = [b"netsepio", ADMIN_KEY.key().as_ref()],
+        bump,
+        constraint = global_config.is_collection_intialization == CollectionStatus::NOTINITIALIZED @ ErrorCode::CollectionAlreadyExists
+    )]
+    pub global_config: Account<'info, GlobalConfig>,
+
     #[account(
         mut,
         constraint = authority.key() == ADMIN_KEY.key()
@@ -245,7 +306,7 @@ pub struct MintNft<'info> {
 
     #[account(
         mut,
-        seeds = [b"erebrus", node_id.as_bytes()],
+        seeds = [b"netsepio", node_id.as_bytes()],
         bump,
     )]
     pub node: Account<'info, Node>,
@@ -271,7 +332,7 @@ pub struct RegisterNode<'info> {
         init,
         payer = payer,
         space = ANCHOR_DISCRIMINATOR_SIZE + Node::INIT_SPACE,
-        seeds = [b"erebrus", id.as_bytes()],
+        seeds = [b"netsepio", id.as_bytes()],
         bump
     )]
     pub node: Account<'info, Node>,
@@ -287,7 +348,7 @@ pub struct DeactivateNode<'info> {
     #[account(
         mut,
         close = payer,
-        seeds = [b"erebrus", node_id.as_bytes()],
+        seeds = [b"netsepio", node_id.as_bytes()],
         bump,
         constraint = node.owner == payer.key() @ ErrorCode::NotNodeOwner
     )]
@@ -320,13 +381,16 @@ pub struct UpdateNodeMetadata<'info> {
         mut,
         constraint = authority.key() == ADMIN_KEY.key()
     )]
+    /// The admin authority, restricted to ADMIN_KEY
     pub authority: Signer<'info>,
 
     #[account(mut)]
-    pub asset: Signer<'info>,
+    /// CHECK: This is the NFT asset, validated by mpl-core
+    pub asset: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub collection: Signer<'info>,
+    /// CHECK: This is the collection, validated by mpl-core
+    pub collection: UncheckedAccount<'info>,
 
     #[account(address = MPL_CORE_ID)]
     /// CHECK: This is the MPL Core program
@@ -343,7 +407,7 @@ pub struct UpdateNodeMetadata<'info> {
 pub struct UpdateNode<'info> {
     #[account(
         mut,
-        seeds = [b"erebrus", node_id.as_bytes()],
+        seeds = [b"netsepio", node_id.as_bytes()],
         bump,
         constraint = payer.key() == ADMIN_KEY.key() @ ErrorCode::NotAuthorized
     )]
@@ -358,9 +422,27 @@ pub struct UpdateNode<'info> {
 pub struct CreateCheckpoint<'info> {
     #[account(
         mut,
-        seeds = [b"erebrus", node_id.as_bytes()],
+        seeds = [b"netsepio", node_id.as_bytes()],
         bump,
         constraint = node.owner == payer.key() || payer.key() == ADMIN_KEY.key() @ ErrorCode::NotAuthorized
+    )]
+    pub node: Account<'info, Node>,
+
+    #[account(mut)]
+    pub payer: Signer<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(node_id: String)]
+pub struct ForceDeactivateNode<'info> {
+    #[account(
+        mut,
+        close = payer,
+        seeds = [b"netsepio", node_id.as_bytes()],
+        bump,
+        constraint = node.owner == payer.key() @ ErrorCode::NotNodeOwner
     )]
     pub node: Account<'info, Node>,
 
@@ -377,8 +459,27 @@ pub enum NodeStatus {
     MAINTENANCE,
 }
 
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
+pub enum CollectionStatus {
+    NOTINITIALIZED,
+    INITIALIZED,
+}
+
 impl anchor_lang::Space for NodeStatus {
     const INIT_SPACE: usize = 1; // Enums are stored as a u8 discriminator
+}
+
+impl anchor_lang::Space for CollectionStatus {
+    const INIT_SPACE: usize = 1; // Enums are stored as a u8 discriminator
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct GlobalConfig {
+    pub is_collection_intialization: CollectionStatus,
+    pub collection_mint: Option<Pubkey>,
+    #[max_len(500)]
+    pub collection_metadata: Option<String>,
 }
 
 #[account]
@@ -426,7 +527,7 @@ pub struct NodeRegistered {
 #[event]
 pub struct NodeDeactivated {
     pub id: String,
-    pub owner_address: Pubkey, // Changed from operator_address to match usage
+    pub owner_address: Pubkey,
 }
 
 #[event]
@@ -457,4 +558,6 @@ pub enum ErrorCode {
     NotAuthorized,
     #[msg("Provided asset does not match node's asset")]
     InvalidAsset, // New error for asset mismatch
+    #[msg("Collection already exists")]
+    CollectionAlreadyExists,
 }

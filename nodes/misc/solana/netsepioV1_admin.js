@@ -104,6 +104,7 @@ async function loadOrCreateAssetKeypair(nodeId) {
 
   async function createCollection(program, wallet, collectionName, collectionUri) {
     // Generate a keypair for the collection account
+    // 0x1nadslskaaskdf --wallet address 
     const collectionKeypair = loadorCreateKeypairCollection(program, wallet);
 
     // TEST CASE 1: Calling Collection through admin
