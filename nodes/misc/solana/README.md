@@ -18,18 +18,20 @@ A command-line tool for managing nodes on the Solana blockchain using the NetSep
 2. Install dependencies:
    ```bash
    npm install
+   or
+   yarn
    ```
 
 ## Available Commands
 
-### User Commands (netsepioV1_user.js)
+### User Commands (netsepio_user.js)
 
 #### Register a Node
 
 Register a new node with the NetSepio program.
 
 ```bash
-node netsepioV1_user.js registerNode <nodeId> <name> <nodeType> <config> <ipaddress> <region> <location> <metadata> <owner>
+node netsepio_user.js registerNode <nodeId> <name> <nodeType> <config> <ipaddress> <region> <location> <metadata> <owner>
 ```
 
 Parameters:
@@ -47,16 +49,16 @@ Parameters:
 Example:
 
 ```bash
-node netsepioV1_user.js registerNode \
-  node-123 \
-  "Luffy" \
+node netsepio_user.js registerNode \
+  "node-$(($RANDOM % 10000))" \
+  "Zoro" \
   validator \
   '{"cpu":"16 cores","memory":"64GB","disk":"5TB"}' \
   34.92.123.456 \
   us-east \
   "New York, NY" \
   '{"version":"2.0.1","lastUpdate":"2023-06-15"}' \
-  "3nKn5GhMTJ1hHCYjhWAV1etPfypWBqM9dpPrW85VfPWD"
+  "EdPJtnunTwxQLo3FCNWN464VLJMb4B6LhBN2HrbAYKpD"
 ```
 
 #### Get Node Data
@@ -64,7 +66,16 @@ node netsepioV1_user.js registerNode \
 Retrieve information about a registered node.
 
 ```bash
-node netsepioV1_user.js get <nodeId>
+node netsepio_user.js getNodeData <nodeId>
+
+```
+
+Example :
+
+```bash
+node netsepio_user.js getNodeData node-1234
+
+
 ```
 
 #### Create Checkpoint
@@ -72,7 +83,13 @@ node netsepioV1_user.js get <nodeId>
 Create a checkpoint for a node.
 
 ```bash
-node netsepioV1_user.js createCheckpoint <nodeId> <checkpointData>
+node netsepio_user.js createCheckpoint <nodeId> <checkpointData>
+```
+
+Example:
+
+```bash
+node netsepio_user.js createCheckpoint node-1234 '{"timestamp":"2023-05-15T12:00:00Z","status":"healthy","metrics":{"uptime":"99.9%","cpu":"45%","memory":"60%"}}'
 ```
 
 #### Deactivate Node
@@ -80,17 +97,52 @@ node netsepioV1_user.js createCheckpoint <nodeId> <checkpointData>
 Deactivate a registered node.
 
 ```bash
-node netsepioV1_user.js deactivateNode <nodeId>
+node netsepio_user.js deactivateNode <nodeId>
 ```
 
-### Admin Commands (netsepioV1_admin.js)
+Example:
+
+```bash
+node netsepio_user.js deactivateNode node-1234 CollectionPublicKeyHere
+```
+
+#### Force Deactivate Node
+
+```bash
+node netsepio_user.js forceDeactivate <nodeId>
+
+```
+
+Example:
+
+```bash
+node netsepio_user.js forceDeactivate node-1234
+```
+
+### Admin Commands (netsepio_admin.js)
+
+#### INTIALIZE GLOBAL CONFIG
+
+ADMIN WILL INTIALIZE THE GLOBAL CONFIG
+
+```bash
+node netsepio_admin.js intializeGlobalConfig
+
+```
 
 #### Create Collection
 
 Create a new NFT collection.
 
 ```bash
-node netsepioV1_admin.js createCollection <collectionName> <collectionUri>
+node netsepio_admin.js createCollection <collectionName> <collectionUri>
+```
+
+Example:
+
+```bash
+node netsepio_admin.js createCollection NetSepio www.exampleuri.com
+
 ```
 
 #### Mint NFT
@@ -98,7 +150,13 @@ node netsepioV1_admin.js createCollection <collectionName> <collectionUri>
 Mint a new NFT for a node.
 
 ```bash
-node netsepioV1_admin.js mintNFT <nodeId> <nftName> <nftUri> <owner>
+node netsepio_admin.js mintNFT <nodeId> <nftName> <nftUri> <owner>
+```
+
+Example:
+
+```bash
+node netsepio_admin.js mintNFT node-6909 CyberPunk1 "www.exampleuri.com" EdPJtnunTwxQLo3FCNWN464VLJMb4B6LhBN2HrbAYKpD
 ```
 
 #### Update Metadata
@@ -106,7 +164,7 @@ node netsepioV1_admin.js mintNFT <nodeId> <nftName> <nftUri> <owner>
 Update NFT metadata.
 
 ```bash
-node netsepioV1_admin.js updateMetadata <assetKeypair> <collectionKey> <newNftUri>
+node netsepio_admin.js updateMetadata  <newNftUri>
 ```
 
 #### Update Node Status
@@ -114,7 +172,7 @@ node netsepioV1_admin.js updateMetadata <assetKeypair> <collectionKey> <newNftUr
 Update the status of a node.
 
 ```bash
-node netsepioV1_admin.js updateNodeStatus <nodeId> <newStatus>
+node netsepio_admin.js updateNodeStatus <nodeId> <newStatus>
 ```
 
 ## Node Status Values
@@ -127,11 +185,11 @@ The node status can be one of the following:
 
 ## Keypair Management
 
-The scripts automatically handle keypair management:
+The scripts use keypair configuration from the .env file:
 
-- If `Keypair.json` exists, it will be used
-- If not, a new keypair will be generated and saved
-- The keypair is used for signing transactions
+- Add your Keypair to .env as `PRIVATE_KEY=your_base58_private_key`
+- The private key is used to create a keypair for signing transactions
+- If no private key is provided, the script will exit with an error
 
 ## Error Handling
 

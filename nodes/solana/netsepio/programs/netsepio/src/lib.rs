@@ -308,10 +308,14 @@ pub struct MintNft<'info> {
         mut,
         seeds = [b"netsepio", node_id.as_bytes()],
         bump,
+        constraint = node.asset.is_none() @ ErrorCode::AssetAlreadyExists
     )]
     pub node: Account<'info, Node>,
 
-    /// CHECK: Owner of the asset (recipient of the NFT)
+    /// CHECK: Owner is validated by constraint to match node.owner
+    #[account(mut,
+        constraint = owner.key() == node.owner @ ErrorCode::NotNodeOwner        
+    )]
     pub owner: UncheckedAccount<'info>,
 
     #[account(mut)]
@@ -424,7 +428,7 @@ pub struct CreateCheckpoint<'info> {
         mut,
         seeds = [b"netsepio", node_id.as_bytes()],
         bump,
-        constraint = node.owner == payer.key() || payer.key() == ADMIN_KEY.key() @ ErrorCode::NotAuthorized
+        constraint = node.user == payer.key() || payer.key() == ADMIN_KEY.key() @ ErrorCode::NotAuthorized
     )]
     pub node: Account<'info, Node>,
 
@@ -442,7 +446,7 @@ pub struct ForceDeactivateNode<'info> {
         close = payer,
         seeds = [b"netsepio", node_id.as_bytes()],
         bump,
-        constraint = node.owner == payer.key() @ ErrorCode::NotNodeOwner
+        constraint = node.owner == payer.key() && node.asset.is_none() @ ErrorCode::NotNodeOwner
     )]
     pub node: Account<'info, Node>,
 
@@ -487,22 +491,22 @@ pub struct GlobalConfig {
 pub struct Node {
     #[max_len(50)]
     pub id: String,
+    //node wallet who is registering
     pub user: Pubkey,
-    #[max_len(50)]
+    #[max_len(1000)]
     pub name: String,
-    #[max_len(50)]
+    #[max_len(1000)]
     pub node_type: String,
-    #[max_len(200)]
+    #[max_len(1000)]
     pub config: String,
-    #[max_len(50)]
+    #[max_len(1000)]
     pub ipaddress: String,
-    #[max_len(50)]
+    #[max_len(1000)]
     pub region: String,
-    #[max_len(100)]
+    #[max_len(1000)]
     pub location: String,
-    #[max_len(200)]
+    #[max_len(1000)]
     pub metadata: String,
-    #[max_len(50)]
     pub owner: Pubkey,
     pub asset: Option<Pubkey>,
     pub status: NodeStatus,
@@ -560,4 +564,6 @@ pub enum ErrorCode {
     InvalidAsset, // New error for asset mismatch
     #[msg("Collection already exists")]
     CollectionAlreadyExists,
+    #[msg("Asset already exists for this node")]
+    AssetAlreadyExists,
 }

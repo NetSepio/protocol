@@ -2,17 +2,6 @@
 
 A Solana program for managing decentralized network nodes with registration, status management, and checkpoint creation capabilities.
 
-
-
-
-
-
-## Deployment Details
-
-- **Program ID**: `E67ritmxgYPVP9SbcXp5KQx2s5zrx3JzKPg6bzqgkcEZ`
-- **Deployment Signature**: `48pCpbRL5mGqcubPUs9nZEQn8quwouAb9HY9kwRR4dCgPaYXZKdn8VE4aBVRwQg2S2KfNs4rJeiUvrXXg2QHwKko`
-- **Explorer URL**: [View on Solana Mainnet Explorer](https://explorer.solana.com/address/E67ritmxgYPVP9SbcXp5KQx2s5zrx3JzKPg6bzqgkcEZ)
-
 ## Program Overview
 
 The Erebrus Node Management Program is a Solana smart contract that enables decentralized management of network nodes. It provides functionality for node registration, status updates, deactivation, and checkpoint creation.

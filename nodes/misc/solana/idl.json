@@ -1,5 +1,5 @@
 {
-  "address": "7JD74hNXHTYBMw9FMfduY9ArRf8bTFdsvWJQFmKyAGGj",
+  "address": "9pLwZy1VgTtEYEELYvpbK8MsTHm2jWG3ZtGHtAgu7k8S",
   "metadata": {
     "name": "netsepio",
     "version": "0.1.0",
@@ -28,13 +28,14 @@
               {
                 "kind": "const",
                 "value": [
+                  110,
                   101,
-                  114,
+                  116,
+                  115,
                   101,
-                  98,
-                  114,
-                  117,
-                  115
+                  112,
+                  105,
+                  111
                 ]
               },
               {
@@ -78,6 +79,64 @@
         82
       ],
       "accounts": [
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  101,
+                  116,
+                  115,
+                  101,
+                  112,
+                  105,
+                  111
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  211,
+                  226,
+                  50,
+                  77,
+                  231,
+                  251,
+                  114,
+                  76,
+                  147,
+                  154,
+                  246,
+                  193,
+                  214,
+                  237,
+                  140,
+                  113,
+                  34,
+                  131,
+                  211,
+                  89,
+                  198,
+                  230,
+                  23,
+                  235,
+                  240,
+                  82,
+                  153,
+                  41,
+                  172,
+                  41,
+                  179,
+                  135
+                ]
+              }
+            ]
+          }
+        },
         {
           "name": "authority",
           "writable": true,
@@ -134,13 +193,14 @@
               {
                 "kind": "const",
                 "value": [
+                  110,
                   101,
-                  114,
+                  116,
+                  115,
                   101,
-                  98,
-                  114,
-                  117,
-                  115
+                  112,
+                  105,
+                  111
                 ]
               },
               {
@@ -180,6 +240,144 @@
       ]
     },
     {
+      "name": "force_deactivate_node",
+      "discriminator": [
+        170,
+        92,
+        170,
+        141,
+        229,
+        49,
+        227,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "node",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  101,
+                  116,
+                  115,
+                  101,
+                  112,
+                  105,
+                  111
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "node_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "node_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "intialize_global_config",
+      "discriminator": [
+        194,
+        17,
+        10,
+        10,
+        186,
+        115,
+        170,
+        177
+      ],
+      "accounts": [
+        {
+          "name": "global_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  110,
+                  101,
+                  116,
+                  115,
+                  101,
+                  112,
+                  105,
+                  111
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  211,
+                  226,
+                  50,
+                  77,
+                  231,
+                  251,
+                  114,
+                  76,
+                  147,
+                  154,
+                  246,
+                  193,
+                  214,
+                  237,
+                  140,
+                  113,
+                  34,
+                  131,
+                  211,
+                  89,
+                  198,
+                  230,
+                  23,
+                  235,
+                  240,
+                  82,
+                  153,
+                  41,
+                  172,
+                  41,
+                  179,
+                  135
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "mint_nft",
       "discriminator": [
         211,
@@ -214,13 +412,14 @@
               {
                 "kind": "const",
                 "value": [
+                  110,
                   101,
-                  114,
+                  116,
+                  115,
                   101,
-                  98,
-                  114,
-                  117,
-                  115
+                  112,
+                  105,
+                  111
                 ]
               },
               {
@@ -231,7 +430,8 @@
           }
         },
         {
-          "name": "owner"
+          "name": "owner",
+          "writable": true
         },
         {
           "name": "collection",
@@ -282,13 +482,14 @@
               {
                 "kind": "const",
                 "value": [
+                  110,
                   101,
-                  114,
+                  116,
+                  115,
                   101,
-                  98,
-                  114,
-                  117,
-                  115
+                  112,
+                  105,
+                  111
                 ]
               },
               {
@@ -362,18 +563,19 @@
       "accounts": [
         {
           "name": "authority",
+          "docs": [
+            "The admin authority, restricted to ADMIN_KEY"
+          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "asset",
-          "writable": true,
-          "signer": true
+          "writable": true
         },
         {
           "name": "collection",
-          "writable": true,
-          "signer": true
+          "writable": true
         },
         {
           "name": "mpl_core_program",
@@ -417,13 +619,14 @@
               {
                 "kind": "const",
                 "value": [
+                  110,
                   101,
-                  114,
+                  116,
+                  115,
                   101,
-                  98,
-                  114,
-                  117,
-                  115
+                  112,
+                  105,
+                  111
                 ]
               },
               {
@@ -456,6 +659,19 @@
     }
   ],
   "accounts": [
+    {
+      "name": "GlobalConfig",
+      "discriminator": [
+        149,
+        8,
+        156,
+        202,
+        160,
+        252,
+        176,
+        217
+      ]
+    },
     {
       "name": "Node",
       "discriminator": [
@@ -557,6 +773,16 @@
       "code": 6003,
       "name": "InvalidAsset",
       "msg": "Provided asset does not match node's asset"
+    },
+    {
+      "code": 6004,
+      "name": "CollectionAlreadyExists",
+      "msg": "Collection already exists"
+    },
+    {
+      "code": 6005,
+      "name": "AssetAlreadyExists",
+      "msg": "Asset already exists for this node"
     }
   ],
   "types": [
@@ -588,6 +814,48 @@
           {
             "name": "data",
             "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CollectionStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "NOTINITIALIZED"
+          },
+          {
+            "name": "INITIALIZED"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GlobalConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "is_collection_intialization",
+            "type": {
+              "defined": {
+                "name": "CollectionStatus"
+              }
+            }
+          },
+          {
+            "name": "collection_mint",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "collection_metadata",
+            "type": {
+              "option": "string"
+            }
           }
         ]
       }

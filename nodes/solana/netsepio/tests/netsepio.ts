@@ -381,10 +381,13 @@ describe("netsepio", () => {
   it("Activate Global Config", async () => {
     try {
       console.log("Initializing global config");
+      //Initialize the global config
       await program.methods
         .intializeGlobalConfig()
         .accounts({ payer: user.publicKey })
         .rpc();
+
+      //Get the global config
       const config = await getGlobalConfig();
       assert.deepEqual(config.isCollectionIntialization, {
         notinitialized: {},
@@ -404,7 +407,7 @@ describe("netsepio", () => {
         // Generate a keypair for the collection account
         const collectionKeypair = GlobalConfigCollectionKeypair;
         // Define collection metadata
-        const collectionName = "Netsepio Collection";
+        const collectionName = "NetSepio";
         const collectionUri = "https://example.com/collection.json";
 
         const tx = await program.methods
@@ -947,5 +950,52 @@ describe("netsepio", () => {
     console.log(
       "✅ Successfully caught NotAuthorized error for non-owner force deactivation attempt!"
     );
+  });
+  it("Force Deactivate Node as Owner Should Fail", async () => {
+    // Create a node owner and a different user
+    const nodeOwner = await createFundedKeypair(0.5);
+    // STEP 1: Register a node
+    const { testNodeId, nodePda } = await registerNode(
+      nodeOwner,
+      nodeOwner.publicKey
+    );
+    let nodeAccountBeforeDeactivation = await program.account.node.fetch(
+      nodePda
+    );
+    console.log(
+      `The pda before deactivation : ${nodeAccountBeforeDeactivation}`
+    );
+    assert.isNotNull(
+      nodeAccountBeforeDeactivation,
+      "Node account should be closed after force deactivation"
+    );
+
+    try {
+      console.log("Hello");
+
+      await program.methods
+        .forceDeactivateNode(testNodeId)
+        .accountsPartial({
+          node: nodePda,
+          payer: nodeOwner.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([nodeOwner])
+        .rpc();
+
+      console.log("Hello2");
+      let nodeAccountAfterDeactivation = await program.account.node.fetch(
+        nodePda
+      );
+      console.log(
+        `The pda after deactivation : ${nodeAccountAfterDeactivation}`
+      );
+      assert.isNull(
+        nodeAccountAfterDeactivation,
+        "Node account should be closed after force deactivation"
+      );
+    } catch (error) {
+      assert.isNotNull(error, "Error should be NotAuthorized for owner");
+    }
   });
 });
