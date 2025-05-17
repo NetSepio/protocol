@@ -971,8 +971,6 @@ describe("netsepio", () => {
     );
 
     try {
-      console.log("Hello");
-
       await program.methods
         .forceDeactivateNode(testNodeId)
         .accountsPartial({
@@ -982,8 +980,6 @@ describe("netsepio", () => {
         })
         .signers([nodeOwner])
         .rpc();
-
-      console.log("Hello2");
       let nodeAccountAfterDeactivation = await program.account.node.fetch(
         nodePda
       );

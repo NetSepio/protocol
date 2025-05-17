@@ -61,35 +61,18 @@ node netsepio_user.js registerNode \
   "EdPJtnunTwxQLo3FCNWN464VLJMb4B6LhBN2HrbAYKpD"
 ```
 
-#### Get Node Data
-
-Retrieve information about a registered node.
-
-```bash
-node netsepio_user.js getNodeData <nodeId>
-
-```
-
-Example :
-
-```bash
-node netsepio_user.js getNodeData node-1234
-
-
-```
-
 #### Create Checkpoint
 
 Create a checkpoint for a node.
 
 ```bash
-node netsepio_user.js createCheckpoint <nodeId> <checkpointData>
+  node netsepio_user.js createCheckpoint <nodeId> <checkpointData>
 ```
 
 Example:
 
 ```bash
-node netsepio_user.js createCheckpoint node-1234 '{"timestamp":"2023-05-15T12:00:00Z","status":"healthy","metrics":{"uptime":"99.9%","cpu":"45%","memory":"60%"}}'
+  node netsepio_user.js createCheckpoint node-1234 '{"timestamp":"2023-05-15T12:00:00Z","status":"healthy","metrics":{"uptime":"99.9%","cpu":"45%","memory":"60%"}}'
 ```
 
 #### Deactivate Node
@@ -97,27 +80,50 @@ node netsepio_user.js createCheckpoint node-1234 '{"timestamp":"2023-05-15T12:00
 Deactivate a registered node.
 
 ```bash
-node netsepio_user.js deactivateNode <nodeId>
+  node netsepio_user.js deactivateNode <nodeId>
 ```
 
 Example:
 
 ```bash
-node netsepio_user.js deactivateNode node-1234 CollectionPublicKeyHere
+  node netsepio_user.js deactivateNode node-1234 CollectionPublicKeyHere
 ```
 
 #### Force Deactivate Node
 
 ```bash
-node netsepio_user.js forceDeactivate <nodeId>
+  node netsepio_user.js forceDeactivate <nodeId>
 
 ```
 
 Example:
 
 ```bash
-node netsepio_user.js forceDeactivate node-1234
+  node netsepio_user.js forceDeactivate node-1234
 ```
+
+#### Get Node Data
+
+Retrieve information about a registered node.
+
+```bash
+  node netsepio_user.js getNodeData <nodeId>
+```
+
+Example :
+
+```bash
+  node netsepio_user.js getNodeData node-1234
+```
+
+#### CHECK BALANCE
+
+Check your SOL balance for the keypair address.
+
+```bash
+  node netsepio_user.js checkBalance
+```
+
 
 ### Admin Commands (netsepio_admin.js)
 
@@ -126,8 +132,7 @@ node netsepio_user.js forceDeactivate node-1234
 ADMIN WILL INTIALIZE THE GLOBAL CONFIG
 
 ```bash
-node netsepio_admin.js intializeGlobalConfig
-
+  node netsepio_admin.js intializeGlobalConfig
 ```
 
 #### Create Collection
@@ -135,14 +140,13 @@ node netsepio_admin.js intializeGlobalConfig
 Create a new NFT collection.
 
 ```bash
-node netsepio_admin.js createCollection <collectionName> <collectionUri>
+  node netsepio_admin.js createCollection <collectionName> <collectionUri>
 ```
 
 Example:
 
 ```bash
-node netsepio_admin.js createCollection NetSepio www.exampleuri.com
-
+  node netsepio_admin.js createCollection NetSepio www.exampleuri.com
 ```
 
 #### Mint NFT
@@ -150,13 +154,13 @@ node netsepio_admin.js createCollection NetSepio www.exampleuri.com
 Mint a new NFT for a node.
 
 ```bash
-node netsepio_admin.js mintNFT <nodeId> <nftName> <nftUri> <owner>
+  node netsepio_admin.js mintNFT <nodeId> <nftName> <nftUri> <owner>
 ```
 
 Example:
 
 ```bash
-node netsepio_admin.js mintNFT node-6909 CyberPunk1 "www.exampleuri.com" EdPJtnunTwxQLo3FCNWN464VLJMb4B6LhBN2HrbAYKpD
+  node netsepio_admin.js mintNFT node-6909 CyberPunk1 "www.exampleuri.com" EdPJtnunTwxQLo3FCNWN464VLJMb4B6LhBN2HrbAYKpD
 ```
 
 #### Update Metadata
@@ -164,7 +168,7 @@ node netsepio_admin.js mintNFT node-6909 CyberPunk1 "www.exampleuri.com" EdPJtnu
 Update NFT metadata.
 
 ```bash
-node netsepio_admin.js updateMetadata  <newNftUri>
+  node netsepio_admin.js updateMetadata  <newNftUri>
 ```
 
 #### Update Node Status
@@ -172,7 +176,7 @@ node netsepio_admin.js updateMetadata  <newNftUri>
 Update the status of a node.
 
 ```bash
-node netsepio_admin.js updateNodeStatus <nodeId> <newStatus>
+  node netsepio_admin.js updateNodeStatus <nodeId> <newStatus>
 ```
 
 ## Node Status Values
@@ -187,9 +191,33 @@ The node status can be one of the following:
 
 The scripts use keypair configuration from the .env file:
 
-- Add your Keypair to .env as `PRIVATE_KEY=your_base58_private_key`
-- The private key is used to create a keypair for signing transactions
+- Add your Keypair to .env as follows:
+  - For user operations: `USER_KEY=[your_private_key_array]`
+  - For admin operations: `ADMIN_KEY=[your_private_key_array]`
+  - For collection operations: `COLLECTION_KEYPAIR=[your_collection_keypair_array]`
 - If no private key is provided, the script will exit with an error
+
+## Network Configuration
+
+The network connection is configured through the .env file:
+
+- Set `CLUSTER` to one of the following values:
+  - `LOCALNET`: Connect to local Solana node (http://127.0.0.1:8899)
+  - `DEVNET`: Connect to Solana devnet (https://api.devnet.solana.com)
+  - `TESTNET`: Connect to Solana testnet (https://api.testnet.solana.com)
+  - `CUSTOM`: Connect to custom RPC endpoint specified in `CUSTOM_RPC`
+- For custom RPC connections, set `CUSTOM_RPC` to your RPC provider's URL (e.g., from Alchemy)
+
+Example .env file:
+
+```bash
+  CLUSTER=DEVNET
+```
+and
+
+```bash
+  CUSTOM_RPC=https://your-custom-rpc-endpoint.com
+```
 
 ## Error Handling
 
@@ -200,12 +228,6 @@ All commands return JSON-formatted responses with:
 - `message`: Description of the result
 - `data`: Additional data (if successful)
 - `error`: Error message (if failed)
-
-## Network Configuration
-
-- All operations are performed on the Solana devnet
-- Connection URL: `https://api.devnet.solana.com`
-- Commitment level: `confirmed`
 
 ## Notes
 

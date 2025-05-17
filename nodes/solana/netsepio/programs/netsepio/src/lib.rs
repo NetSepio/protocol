@@ -10,7 +10,7 @@ use mpl_core::{
     ID as MPL_CORE_ID,
 };
 
-declare_id!("39vVDTvVqdTkXLZujJuA11SS1ohmNH2JLcuXZVqEyFZx");
+declare_id!("DL6PdWxTDY3KxpzomRr6H4e6nekw13yz5w2SCJ4RjDMD");
 
 pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 

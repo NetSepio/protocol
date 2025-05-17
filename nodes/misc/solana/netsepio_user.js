@@ -19,6 +19,8 @@ import idl from "./idl.json" with { type: "json" };
         return "https://api.testnet.solana.com"
       case  "LOCALNET":
         return "http://127.0.0.1:8899"
+      case "CUSTOM":
+        return process.env.CUSTOM_RPC
       default:
         throw new Error("Invalid cluster");
     }
@@ -44,7 +46,6 @@ import idl from "./idl.json" with { type: "json" };
       return 0;
     }
   }
-
 
   async function getNodeData(program, nodeId) {
     try {

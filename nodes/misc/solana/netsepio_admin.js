@@ -28,6 +28,8 @@ function getClusterUrl(cluster) {
         return "https://api.testnet.solana.com"
       case  "LOCALNET":
         return "http://127.0.0.1:8899"
+      case "CUSTOM":
+        return process.env.CUSTOM_RPC
       default:
         throw new Error("Invalid cluster");
     }
