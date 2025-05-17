@@ -6,63 +6,62 @@ import {
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import fs from "fs";
-import path from "path";
+import dotenv from "dotenv";
+dotenv.config();
 
 import idl from "./idl.json" with { type: "json" };
-import { json } from "stream/consumers";
 
-  // Helper function to check wallet balance
+  function getClusterUrl(cluster) {
+    switch(cluster){
+      case "DEVNET":
+        return "https://api.devnet.solana.com"
+      case "TESTNET":
+        return "https://api.testnet.solana.com"
+      case  "LOCALNET":
+        return "http://127.0.0.1:8899"
+      case "CUSTOM":
+        return process.env.CUSTOM_RPC
+      default:
+        throw new Error("Invalid cluster");
+    }
+  }
+
+
+  /************ GETTER FUNCTIONS ************/
   async function checkBalance(connection, publicKey) {
     try {
       const balance = await connection.getBalance(publicKey);
-      return balance / LAMPORTS_PER_SOL;
+      const summary = {
+        action: "checkBalance",
+        success: true,
+        message: "Balance checked successfully",
+        data:{
+          balance: balance,
+          balanceInSol: balance / LAMPORTS_PER_SOL,
+        },
+      };
+      console.log(JSON.stringify(summary, null, 2));
     } catch (error) {
       console.error("Error checking balance:", error.message);
       return 0;
     }
   }
-   // Add this function at the top of your file
-function loadOrCreateKeypair() {
-  const keypairPath = './Keypair.json';
-  
-  try {
-    // Check if Keypair.json exists
-    if (fs.existsSync(keypairPath)) {
-      const keypairData = JSON.parse(fs.readFileSync(keypairPath));
-      return Keypair.fromSecretKey(new Uint8Array(keypairData));
-    }
-    
-    // If file doesn't exist, create new keypair
-    const newKeypair = Keypair.generate();
-    
-    // Save the new keypair to file
-    fs.writeFileSync(keypairPath, JSON.stringify(Array.from(newKeypair.secretKey)));
-    console.log("New keypair created and saved to Keypair.json");
-    
-    return newKeypair;
-  } catch (error) {
-    console.error("Error handling keypair:", error);
-    throw error;
-  }
-}
-
 
   async function getNodeData(program, nodeId) {
     try {
-      console.log("Getting Node Data for ", nodeId)
       const [nodePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("erebrus"), Buffer.from(nodeId)],
+        [Buffer.from("netsepio"), Buffer.from(nodeId)],
         program.programId
       );
      
       const nodeAccount = await program.account.node.fetch(nodePda);
-      console.log("The node details of ",nodeId," :");
       const summary = {
         action: "getNodeData",
         success: true,
         message: "Node data fetched successfully",
-        data: nodeAccount,
+        data:{ 
+          nodeData: nodeAccount,
+        },
       };
       console.log(JSON.stringify(summary, null, 2));
       
@@ -76,6 +75,8 @@ function loadOrCreateKeypair() {
       console.log(JSON.stringify(summary, null, 2))
     }
   } 
+
+  /************ UTILITY FUNCTIONS ************/
 
   async function registerNode(program,wallet, args) {
         try {
@@ -116,7 +117,6 @@ function loadOrCreateKeypair() {
           owner: ownerString
         };
 
-        console.log("Node Registration Intialization....");
         // Register the node
         const tx = await program.methods
           .registerNode(
@@ -135,7 +135,6 @@ function loadOrCreateKeypair() {
           })
           .rpc();
           console.log("Node Registration Completed for ", nodeId)
-
           const summary = {
             action: "registerNode",
             success: true,
@@ -165,12 +164,11 @@ function loadOrCreateKeypair() {
 
   async function createCheckpoint(program, wallet, nodeId, checkpointData) {
     const [nodePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("erebrus"), Buffer.from(nodeId)],
+        [Buffer.from("netsepio"), Buffer.from(nodeId)],
         program.programId
       );
 
     try {
-      console.log("Creating checkpoint ...");
       const tx = await program.methods
       .createCheckpoint(nodeId, checkpointData)
       .accounts({
@@ -203,23 +201,22 @@ function loadOrCreateKeypair() {
     }
   }
 
-  async function deactivateNode(program, wallet, nodeId , collectionKey) {
+  async function deactivateNode(program, wallet, nodeId, collectionKey) {
     const [nodePda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("erebrus"), Buffer.from(nodeId)],
+        [Buffer.from("netsepio"), Buffer.from(nodeId)],
         program.programId
       );
+      const pdaData = await program.account.node.fetch(nodePda);
       /// Fetching Nft Asset Public Key from the node
-      const asset = nodePda.asset
-
+      const asset = pdaData.asset
     try {
-      console.log("Deactivating node...");    
        const tx = await program.methods
         .deactivateNode(nodeId)
         .accountsPartial({
           node: nodePda,
           payer: wallet.publicKey,
-          asset: asset,
-          collection: collectionKey,
+          asset: new PublicKey(asset),
+          collection: new PublicKey(collectionKey),
           mplCoreProgram: new PublicKey(
             "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
           ),
@@ -237,8 +234,8 @@ function loadOrCreateKeypair() {
         data: {
           nodeId,
           assetInfo: {
-            collectionKey: collectionKey,
             asset: asset,
+            transaction: tx
           },
           transaction: tx,
         },
@@ -255,38 +252,77 @@ function loadOrCreateKeypair() {
       console.log(JSON.stringify(summary, null, 2))
     }
   }
+
+  async function forceDeactivate(program, wallet, nodeId) {
+    try {
+      console.log(`Force Deactivating node for ${nodeId} ...`);
+
+      const [nodePda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("netsepio"), Buffer.from(nodeId)],
+        program.programId
+      );
+
+      await program.methods
+        .forceDeactivateNode(nodeId)
+        .accountsPartial({
+          node: nodePda,
+          payer: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([wallet])
+        .rpc();
+
+     const summary = {
+      action: "forceDeactivate",
+      success: true,
+      message: "Node force deactivated successfully",
+      data: {
+        nodeId,
+        transaction: tx,
+      },
+    };
+    console.log(JSON.stringify(summary, null, 2));
+
+    } catch (error) {
+      const summary = {
+        action: "forceDeactivate",
+        success: false,
+        message: "Failed to force deactivate node",
+        error: error.message,
+      };
+      console.log(JSON.stringify(summary, null, 2));
+    }
+  }
   
   
   async function main() {
+    const CLUSTER = process.env.CLUSTER
     try {
-      // Connect to devnet
+      // Connect to a specific cluster
       const connection = new Connection(
-        "https://api.devnet.solana.com",
+        getClusterUrl(CLUSTER.toUpperCase()),
         "confirmed"
       );
-      console.log("Connected to Solana devnet");
+      console.log("Connected to Solana Cluster : ", CLUSTER.toUpperCase());
 
       // Load or create keypair 
-      const wallet = loadOrCreateKeypair();
+      const keypairData = JSON.parse(process.env.USER_KEY);
+      const secretKey = Uint8Array.from(keypairData);
+      const keypair = Keypair.fromSecretKey(secretKey);
       // Check wallet balance
-      console.log("Using wallet address:", wallet.publicKey.toString());
-
-      const balance = await checkBalance(connection, wallet.publicKey);
-      console.log("Wallet balance:", balance, "SOL");
-  
-      
+      console.log("Using wallet address:", keypair.publicKey.toString());
       // Setup provider
       const provider = new AnchorProvider(
         connection,
         {
-          publicKey: wallet.publicKey,
+          publicKey: keypair.publicKey,
           signTransaction: async (tx) => {
-            tx.partialSign(wallet);
+            tx.partialSign(keypair);
             return tx;
           },
           signAllTransactions: async (txs) => {
             return txs.map((t) => {
-              t.partialSign(wallet);
+              t.partialSign(keypair);
               return t;
             });
           },
@@ -300,32 +336,32 @@ function loadOrCreateKeypair() {
       console.log("Action: ", action);
       // Parse command-line arguments
       const args = process.argv.slice(3);
-
+      
       switch(action){
         case "registerNode":
-          await registerNode(program, wallet ,args);
+          await registerNode(program, keypair ,args);
           break;
-        case "get":
+        case "getNodeData":
           await getNodeData(program, args[0]);
           break;
         case "createCheckpoint":
-          await createCheckpoint(program, wallet, args[0] , args[1]);
+          await createCheckpoint(program, keypair, args[0] , args[1]);
           break;
         case "deactivateNode":
-          await deactivateNode(program, wallet, args[0]);
+          await deactivateNode(program, keypair, args[0],args[1],args[2]);
           break;
+        case "forceDeactivate":
+          await forceDeactivate(program, keypair, args[0]);
+          break;
+        case "checkBalance":
+            await checkBalance(connection, keypair.publicKey);
+            break;
         default:
-          throw new Error(`Invalid action:   ${action}`);
+          throw new Error(`Invalid action`);
       }
-    
     } catch (error) {
-      console.error("Error:", error);
-      if (error.logs) {
-        console.error("Program logs:", error.logs);
-      }
-      
+      console.error("Error:", error.message);
     }
   }
-
-
+  
 main();
