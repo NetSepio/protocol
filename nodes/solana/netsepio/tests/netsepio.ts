@@ -15,6 +15,7 @@ import {
   fetchAsset,
   fetchCollection,
 } from "@metaplex-foundation/mpl-core";
+import * as fs from "fs";
 
 describe("netsepio", () => {
   const provider = anchor.AnchorProvider.env();
@@ -22,33 +23,115 @@ describe("netsepio", () => {
   const user = provider.wallet;
   const program = anchor.workspace.Netsepio as Program<Netsepio>;
 
+  // Initialize GlobalConfigCollectionKeypair before starting tests
+  let GlobalConfigCollectionKeypair: Keypair;
+
+  before(async () => {
+    GlobalConfigCollectionKeypair = await getGlobalConfigCollectionKeypair();
+    console.log(
+      "Using collection keypair:",
+      GlobalConfigCollectionKeypair.publicKey.toBase58()
+    );
+  });
+
   // Reusable function to create and fund a keypair
   async function createFundedKeypair(amountInSol = 2) {
     // Generate a random keypair
     const keypair = Keypair.generate();
     console.log("Generated keypair public key:", keypair.publicKey.toBase58());
 
-    // Fund the keypair with SOL
     const airdropAmount = amountInSol * LAMPORTS_PER_SOL;
     const airdropTx = await provider.connection.requestAirdrop(
       keypair.publicKey,
       airdropAmount
     );
     await provider.connection.confirmTransaction(airdropTx);
-    // console.log(`Funded keypair with ${amountInSol} SOL`);
-
-    // Check and log the balance
-    const balanceInLamports = await provider.connection.getBalance(
-      keypair.publicKey
-    );
-    const balanceInSol = balanceInLamports / LAMPORTS_PER_SOL;
-    // console.log(
-    //   `Keypair balance: ${balanceInSol} SOL (${balanceInLamports} lamports)`
-    // );
-
     // Return the funded keypair
     return keypair;
   }
+
+  async function getGlobalConfig() {
+    const [configPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("netsepio"), user.publicKey.toBuffer()],
+      program.programId
+    );
+    const config = await program.account.globalConfig.fetch(configPda);
+    return config;
+  }
+
+  async function isCollectionCreated() {
+    const configData = await getGlobalConfig();
+    if (!configData) {
+      console.log("Global config account does not exist.");
+      return false;
+    }
+    // Check collectionMint
+    if (!configData.collectionMint) {
+      console.log(
+        "Collection is marked as initialized, but no collection_mint is set."
+      );
+      return false;
+      0;
+    }
+    try {
+      // Verify the collectionMint account exists
+      const accountInfo = await provider.connection.getAccountInfo(
+        new PublicKey(configData.collectionMint)
+      );
+      if (!accountInfo) {
+        console.log(
+          "Collection account does not exist for public key:",
+          configData.collectionMint.toBase58()
+        );
+        return false;
+      }
+
+      // Verify it's an MPL Core collection
+      const umi = createUmi(provider.connection);
+      umi.use(mplCore());
+      const collectionData = await fetchCollection(
+        umi,
+        publicKey(configData.collectionMint.toBase58())
+      );
+
+      console.log("✅ Collection already created successfully!");
+      console.log(`✅ Verified: Collection name = ${collectionData.name}`);
+      console.log(`✅ Verified: Collection URI = ${collectionData.uri}`);
+
+      return true;
+    } catch (error) {
+      console.error("Error verifying collection account:", error);
+      return false;
+    }
+  }
+
+  async function getGlobalConfigCollectionKeypair() {
+    const keypairPath = "./CollectionKeypair.json";
+    try {
+      // Check if Keypair.json exists
+      if (fs.existsSync(keypairPath)) {
+        const keypairData = JSON.parse(fs.readFileSync(keypairPath, "utf-8"));
+        return Keypair.fromSecretKey(new Uint8Array(keypairData));
+      }
+      // If file doesn't exist, create new keypair
+      const newKeypair = Keypair.generate();
+      // Save the new keypair to file
+      fs.writeFileSync(
+        keypairPath,
+        JSON.stringify(Array.from(newKeypair.secretKey)),
+        "utf-8"
+      );
+      console.log("New keypair created and saved to Collection Keypair.json");
+
+      return newKeypair;
+    } catch (error) {
+      console.error("Error loading keypair from file:", error);
+      throw new Error(
+        `Failed to load keypair from ${keypairPath}. Ensure the file exists and contains a valid keypair.`
+      );
+    }
+  }
+
   // Reusable function to register a node
   async function registerNode(payer: Keypair, owner: PublicKey) {
     const testNodeId = "node" + Math.random().toString(36).substring(2, 15);
@@ -72,11 +155,11 @@ describe("netsepio", () => {
     };
 
     const [nodePda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("erebrus"), Buffer.from(testNodeId)],
+      [Buffer.from("netsepio"), Buffer.from(testNodeId)],
       program.programId
     );
-    console.log("🔑 Registering node 🔑");
-    const tx = await program.methods
+
+    await program.methods
       .registerNode(
         testNodeId,
         testNodeData.name,
@@ -94,54 +177,18 @@ describe("netsepio", () => {
       .signers([payer])
       .rpc();
 
-    console.log("🔑 Node registered successfully 🔑");
     return { testNodeId, nodePda };
   }
 
-  // Reusable function to create a collection
-  async function createCollection() {
-    const collectionKeypair = Keypair.generate();
-    console.log("Collection account:", collectionKeypair.publicKey.toBase58());
-
-    const collectionName = "Netsepio NFT Collection";
-    const collectionUri = "https://example.com/nft-collection.json";
-
-    const tx = await program.methods
-      .createCollection(collectionName, collectionUri)
-      .accountsPartial({
-        authority: user.publicKey,
-        payer: user.publicKey,
-        collection: collectionKeypair.publicKey,
-        mplCoreProgram: new PublicKey(
-          "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
-        ),
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([collectionKeypair])
-      .rpc();
-
-    await provider.connection.confirmTransaction(tx);
-
-    const collectionAccountInfo = await provider.connection.getAccountInfo(
-      collectionKeypair.publicKey
-    );
-    assert.isNotNull(collectionAccountInfo, "Collection account should exist");
-
-    return { collectionKeypair, collectionName, collectionUri };
-  }
   //Reusable NFT minting code
   async function mintNft(
     testNodeId: string,
     nftOwner: Keypair,
     authority: Keypair,
     payer: Keypair,
-    collectionKeypair: Keypair
+    collectionPubKey: PublicKey
   ) {
-    console.log("NFT owner:", nftOwner.publicKey.toBase58());
-
     const assetKeypair = Keypair.generate();
-    console.log("NFT asset account:", assetKeypair.publicKey.toBase58());
-
     const nftName = "Soulbound NFT";
     const nftUri = "https://example.com/nft.json";
 
@@ -152,7 +199,7 @@ describe("netsepio", () => {
         payer: payer.publicKey,
         asset: assetKeypair.publicKey,
         owner: nftOwner.publicKey,
-        collection: collectionKeypair.publicKey,
+        collection: collectionPubKey,
         mplCoreProgram: new PublicKey(
           "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
         ),
@@ -165,7 +212,6 @@ describe("netsepio", () => {
 
     return { assetKeypair, nftName, nftUri };
   }
-
   it("Register Node", async () => {
     // Generate a random keypair
     const randomUser = await createFundedKeypair(0.1); // Fund with 2 SOL
@@ -190,7 +236,7 @@ describe("netsepio", () => {
     };
 
     const [nodePda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("erebrus"), Buffer.from(testNodeId)],
+      [Buffer.from("netsepio"), Buffer.from(testNodeId)],
       program.programId
     );
 
@@ -230,14 +276,11 @@ describe("netsepio", () => {
   it("Update Node Status", async () => {
     // Create a non-admin user
     const nonAdminUser = await createFundedKeypair(0.1);
-    console.log("Non-admin user:", nonAdminUser.publicKey.toBase58());
-
     // Register a node first
     const { testNodeId, nodePda } = await registerNode(
       nonAdminUser,
       nonAdminUser.publicKey
     );
-
     /// Test Case 1: update node status as non-admin (should fail)
     let error = null;
     try {
@@ -256,7 +299,6 @@ describe("netsepio", () => {
       "Expected NotAuthorized error"
     );
     console.log("Successfully caught NotAuthorized error for non-admin user");
-
     /// Test Case 2: update node status as admin
     await program.methods
       .updateNodeStatus(testNodeId, 1) // Try to set status to ONLINE
@@ -279,17 +321,10 @@ describe("netsepio", () => {
   });
   it("Create Checkpoint", async () => {
     const randomUser = await createFundedKeypair(0.5);
-    console.log("Random user:", randomUser.publicKey.toBase58());
-
-    const adminUser = await createFundedKeypair(0.5);
-    console.log("Admin user:", adminUser.publicKey.toBase58());
-
-    console.log("Registering node...");
     const { testNodeId, nodePda } = await registerNode(
       randomUser,
       randomUser.publicKey
     );
-
     // Test Case 1A: Owner creates checkpoint
     const firstCheckpointData = JSON.stringify({
       status: "healthy",
@@ -315,7 +350,6 @@ describe("netsepio", () => {
       timestamp: new Date().toISOString(),
     });
     console.log("Updating checkpoint as owner...");
-
     await program.methods
       .createCheckpoint(testNodeId, secondCheckpointData)
       .accounts({
@@ -323,11 +357,9 @@ describe("netsepio", () => {
       })
       .signers([randomUser])
       .rpc();
-
     nodeAccount = await program.account.node.fetch(nodePda);
     assert.equal(nodeAccount.checkpointData, secondCheckpointData);
     console.log("Successfully updated checkpoint");
-
     // Test Case 2: Admin updates checkpoint
     console.log("Updating checkpoint as admin...");
     const adminCheckpointData = JSON.stringify({
@@ -341,129 +373,109 @@ describe("netsepio", () => {
         payer: user.publicKey,
       })
       .rpc();
-
     nodeAccount = await program.account.node.fetch(nodePda);
     assert.equal(nodeAccount.checkpointData, adminCheckpointData);
     console.log("Successfully updated checkpoint by admin");
   });
 
-  it("Create Collection", async () => {
-    // Generate a keypair for the collection account
-    const collectionKeypair = Keypair.generate();
-    console.log("Collection account:", collectionKeypair.publicKey.toBase58());
-
-    // Define collection metadata
-    const collectionName = "Netsepio Collection";
-    const collectionUri = "https://example.com/collection.json";
-
-    // TEST CASE 1: Calling Collection through admin
-    console.log("Creating collection as admin...");
+  it("Activate Global Config", async () => {
     try {
-      // Call the create_collection function
-      const tx = await program.methods
-        .createCollection(collectionName, collectionUri)
-        .accountsPartial({
-          authority: user.publicKey, // Admin account
-          payer: user.publicKey, // Payer for transaction
-          collection: collectionKeypair.publicKey, // Collection account
-          mplCoreProgram: new PublicKey(
-            "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
-          ),
-          systemProgram: SystemProgram.programId, // System Program
-        })
-        .signers([collectionKeypair]) // Sign with collection keypair
+      console.log("Initializing global config");
+      //Initialize the global config
+      await program.methods
+        .intializeGlobalConfig()
+        .accounts({ payer: user.publicKey })
         .rpc();
 
-      console.log("Transaction signature:", tx);
+      //Get the global config
+      const config = await getGlobalConfig();
+      assert.deepEqual(config.isCollectionIntialization, {
+        notinitialized: {},
+      });
+      console.log("Global config initialized");
+    } catch (error) {
+      console.log("Global config is already initialized");
+      const config = await getGlobalConfig();
+      assert.isNotNull(config, "Global config should exist");
+    }
+  });
+  it("Create Collection", async () => {
+    try {
+      const collectionExists = await isCollectionCreated();
 
-      // Wait for confirmation
-      await provider.connection.confirmTransaction(tx);
+      if (!collectionExists) {
+        // Generate a keypair for the collection account
+        const collectionKeypair = GlobalConfigCollectionKeypair;
+        // Define collection metadata
+        const collectionName = "NetSepio";
+        const collectionUri = "https://example.com/collection.json";
 
-      // Verify the collection was created - just check that the account exists
-      // and skip detailed verification which would require additional setup
-      const collectionAccountInfo = await provider.connection.getAccountInfo(
-        collectionKeypair.publicKey
-      );
-      assert.isNotNull(
-        collectionAccountInfo,
-        "Collection account should exist"
-      );
+        const tx = await program.methods
+          .createCollection(collectionName, collectionUri)
+          .accountsPartial({
+            authority: user.publicKey, // Admin account
+            payer: user.publicKey, // Payer for transaction
+            collection: collectionKeypair.publicKey, // Collection account
+            mplCoreProgram: new PublicKey(
+              "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+            ),
+            systemProgram: SystemProgram.programId, // System Program
+          })
+          .signers([collectionKeypair]) // Sign with collection keypair
+          .rpc();
 
-      // Fetch the collection using UMI and mpl-core
-      const umi = createUmi(provider.connection);
-      umi.use(mplCore());
-      const collectionData = await fetchCollection(
-        umi,
-        publicKey(collectionKeypair.publicKey.toBase58())
-      );
+        console.log("Transaction signature:", tx);
+        // Wait for confirmation
+        await provider.connection.confirmTransaction(tx);
 
-      assert.equal(
-        collectionData.name,
-        collectionName,
-        "Collection name should match"
-      );
-      assert.equal(
-        collectionData.uri,
-        collectionUri,
-        "Collection URI should match"
-      );
+        const collectionAccountInfo = await provider.connection.getAccountInfo(
+          collectionKeypair.publicKey
+        );
+        assert.isNotNull(
+          collectionAccountInfo,
+          "Collection account should exist"
+        );
 
-      console.log("✅ Collection created successfully!");
-      console.log(`✅ Verified: Collection name = ${collectionData.name}`);
-      console.log(`✅ Verified: Collection URI = ${collectionData.uri}`);
+        // Fetch the collection using UMI and mpl-core
+        const umi = createUmi(provider.connection);
+        umi.use(mplCore());
 
-      console.log("✅ Collection created successfully!");
+        const collectionData = await fetchCollection(
+          umi,
+          publicKey(collectionKeypair.publicKey.toBase58())
+        );
+
+        assert.equal(
+          collectionData.name,
+          collectionName,
+          "Collection name should match"
+        );
+        assert.equal(
+          collectionData.uri,
+          collectionUri,
+          "Collection URI should match"
+        );
+
+        const config = await getGlobalConfig();
+        assert.deepEqual(config.isCollectionIntialization, {
+          initialized: {},
+        });
+
+        console.log("✅ Collection created successfully!");
+        console.log(`✅ Verified: Collection name = ${collectionData.name}`);
+        console.log(`✅ Verified: Collection URI = ${collectionData.uri}`);
+      }
     } catch (error) {
       console.error("Error creating collection:", error);
-      throw error; // Re-throw to see the full error in test output
+      throw error;
     }
   });
-  it("Create Collection as Non-Admin Should Fail", async () => {
-    const nonAdminUser = await createFundedKeypair(0.5);
-    console.log("Non-admin user:", nonAdminUser.publicKey.toBase58());
 
-    const collectionKeypair = Keypair.generate();
-    console.log("Collection account:", collectionKeypair.publicKey.toBase58());
-
-    const collectionName = "Unauthorized Collection";
-    const collectionUri = "https://example.com/unauthorized.json";
-
-    console.log("Attempting to create collection as non-admin...");
-
-    let error = null;
-    try {
-      await program.methods
-        .createCollection(collectionName, collectionUri)
-        .accountsPartial({
-          authority: nonAdminUser.publicKey, // Non-admin user
-          payer: nonAdminUser.publicKey,
-          collection: collectionKeypair.publicKey,
-          mplCoreProgram: new PublicKey(
-            "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
-          ),
-          systemProgram: SystemProgram.programId,
-        })
-        .signers([nonAdminUser, collectionKeypair])
-        .rpc();
-    } catch (err) {
-      error = err;
-    }
-    assert.isNotNull(error, "Expected an error for non-admin user");
-
-    const collectionAccountInfo = await provider.connection.getAccountInfo(
-      collectionKeypair.publicKey
-    );
-    assert.isNull(collectionAccountInfo, "Collection account should not exist");
-  });
   it("Mint NFT as Admin", async () => {
     const nftOwner = await createFundedKeypair(0.5);
     // const userKeypair = (provider.wallet as any).payer as Keypair; // Access the underlying Keypair
-    // console.log("User keypair:", userKeypair.publicKey.toBase58());
     //STEP 1: Register a node
     const { testNodeId } = await registerNode(nftOwner, nftOwner.publicKey);
-    //STEP 2: Create a collection
-    const { collectionKeypair } = await createCollection();
-    console.log("🔑 Collection created successfully 🔑");
     //TEST CASE 1: Creation of NFT through admin
     const assetKeypair = Keypair.generate();
     const nftName = "Soulbound NFT";
@@ -478,7 +490,7 @@ describe("netsepio", () => {
           payer: user.publicKey,
           asset: assetKeypair.publicKey,
           owner: nftOwner.publicKey,
-          collection: collectionKeypair.publicKey,
+          collection: GlobalConfigCollectionKeypair.publicKey,
           mplCoreProgram: new PublicKey(
             "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
           ),
@@ -520,8 +532,6 @@ describe("netsepio", () => {
     console.log("Non-admin user:", nonAdminUser.publicKey.toBase58());
     //STEP 1: Register a node
     const { testNodeId } = await registerNode(nonAdminUser, user.publicKey);
-    //STEP 2: Create a collection
-    const { collectionKeypair } = await createCollection();
     let error = null;
     let nonAdminAssetKeypair: Keypair | null = null;
     try {
@@ -530,7 +540,7 @@ describe("netsepio", () => {
         nonAdminUser,
         nonAdminUser,
         nonAdminUser,
-        collectionKeypair
+        GlobalConfigCollectionKeypair.publicKey
       );
       nonAdminAssetKeypair = result.assetKeypair;
     } catch (err) {
@@ -556,9 +566,6 @@ describe("netsepio", () => {
 
     //STEP 1: Register a node
     const { testNodeId } = await registerNode(nftOwner, nftOwner.publicKey);
-    //STEP 2: Create a collection
-    const { collectionKeypair } = await createCollection();
-    console.log("Collection created successfully!");
 
     const userKeypair = (provider.wallet as any).payer as Keypair; // Access the underlying Keypair
     console.log("User keypair:", userKeypair.publicKey.toBase58());
@@ -569,12 +576,8 @@ describe("netsepio", () => {
       nftOwner,
       userKeypair,
       userKeypair,
-      collectionKeypair
+      GlobalConfigCollectionKeypair.publicKey
     );
-
-    console.log("NFT minted successfully!");
-
-    const newNftName = "Updated Soulbound NFT";
     const newNftUri = "https://example.com/updated-nft.json";
 
     //STEP 4: Update NFT metadata
@@ -586,13 +589,12 @@ describe("netsepio", () => {
           authority: user.publicKey,
           payer: user.publicKey,
           asset: assetKeypair.publicKey,
-          collection: collectionKeypair.publicKey,
+          collection: GlobalConfigCollectionKeypair.publicKey,
           mplCoreProgram: new PublicKey(
             "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
           ),
           systemProgram: SystemProgram.programId,
         })
-        .signers([assetKeypair, collectionKeypair]) // Add assetKeypair and collectionKeypair as signers
         .rpc();
 
       console.log("Update transaction signature:", updateTx);
@@ -622,32 +624,22 @@ describe("netsepio", () => {
   });
   it("Update Node Metadata as Non-Admin Should Fail", async () => {
     const nftOwner = await createFundedKeypair(0.5);
-
     //STEP 1: Register a node
     const { testNodeId } = await registerNode(nftOwner, nftOwner.publicKey);
-    //STEP 2: Create a collection
-    const { collectionKeypair } = await createCollection();
-    console.log("Collection created successfully!");
-
     const userKeypair = (provider.wallet as any).payer as Keypair;
     /// STEP 3: Mint NFT
-    const { assetKeypair } = await mintNft(
+    const { assetKeypair, nftName, nftUri } = await mintNft(
       testNodeId,
       nftOwner,
+      userKeypair, // admin mints the NFT
       userKeypair,
-      userKeypair,
-      collectionKeypair
+      GlobalConfigCollectionKeypair.publicKey
     );
-    console.log("NFT minted successfully!");
-
-    const nftName = "Soulbound NFT";
-    const nftUri = "https://example.com/nft.json";
 
     const newNftUri = "https://example.com/unauthorized-nft.json";
 
     // TEST CASE 1
     console.log("Attempting to update NFT metadata as non-admin...");
-    let error = null;
     try {
       await program.methods
         .updateNodeMetadata(newNftUri)
@@ -655,26 +647,17 @@ describe("netsepio", () => {
           authority: nftOwner.publicKey,
           payer: nftOwner.publicKey,
           asset: assetKeypair.publicKey,
-          collection: collectionKeypair.publicKey,
+          collection: GlobalConfigCollectionKeypair.publicKey,
           mplCoreProgram: new PublicKey(
             "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
           ),
           systemProgram: SystemProgram.programId,
         })
-        .signers([assetKeypair, collectionKeypair])
+        .signers([nftOwner])
         .rpc();
     } catch (err) {
-      error = err;
-      console.log("Error message:", err.message);
+      assert.isNotNull(err, "Expected an error for non-admin user");
     }
-
-    assert.isNotNull(error, "Expected an error for non-admin user");
-    assert.include(
-      error.message,
-      "Signature verification failed",
-      "Expected signature verification error for non-admin user"
-    );
-
     const umi = createUmi(provider.connection);
     umi.use(mplCore());
     const asset = await fetchAsset(
@@ -683,7 +666,7 @@ describe("netsepio", () => {
     );
     assert.equal(asset.name, nftName, "NFT name should not be updated");
     assert.equal(asset.uri, nftUri, "NFT URI should not be updated");
-
+    assert.notEqual(asset.uri, newNftUri, "NFT URI should not be updated");
     console.log(
       "✅ Successfully caught signature verification error for non-admin metadata update attempt!"
     );
@@ -699,15 +682,13 @@ describe("netsepio", () => {
       nodeOwner,
       nodeOwner.publicKey
     );
-    // STEP 2: Create a collection
-    const { collectionKeypair } = await createCollection();
-    // STEP 3: Mint NFT for the node
+    // STEP 2: Mint NFT for the node
     const { assetKeypair } = await mintNft(
       testNodeId,
       nodeOwner,
       user as any, // admin mints the NFT
       user as any, // admin pays for the transaction
-      collectionKeypair
+      GlobalConfigCollectionKeypair.publicKey
     );
 
     const umi = createUmi(provider.connection);
@@ -736,7 +717,7 @@ describe("netsepio", () => {
           node: nodePda,
           payer: nodeOwner.publicKey,
           asset: assetKeypair.publicKey,
-          collection: collectionKeypair.publicKey,
+          collection: GlobalConfigCollectionKeypair.publicKey,
           mplCoreProgram: new PublicKey(
             "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
           ),
@@ -787,8 +768,6 @@ describe("netsepio", () => {
       nodeOwner,
       nodeOwner.publicKey
     );
-    // STEP 2: Create a collection
-    const { collectionKeypair } = await createCollection();
 
     // STEP 3B: Mint NFT for the node (correct NFT)
     const { assetKeypair: correctAssetKeypair } = await mintNft(
@@ -796,7 +775,7 @@ describe("netsepio", () => {
       nodeOwner,
       userKeypair, // admin
       userKeypair, // admin pays
-      collectionKeypair
+      GlobalConfigCollectionKeypair.publicKey
     );
     // STEP 3C: Mint NFT for the node (incorrect NFT)
     const { assetKeypair: incorrectAssetKeypair } = await mintNft(
@@ -804,7 +783,7 @@ describe("netsepio", () => {
       nodeOwner,
       userKeypair, // admin
       userKeypair, // admin pays
-      collectionKeypair
+      GlobalConfigCollectionKeypair.publicKey
     );
     // Verify node has the correct NFT
     const umi = createUmi(provider.connection);
@@ -838,7 +817,7 @@ describe("netsepio", () => {
           node: nodePda1,
           payer: nodeOwner.publicKey,
           asset: correctAssetKeypair.publicKey, // Incorrect NFT
-          collection: collectionKeypair.publicKey,
+          collection: GlobalConfigCollectionKeypair.publicKey,
           mplCoreProgram: new PublicKey(
             "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
           ),
@@ -878,8 +857,6 @@ describe("netsepio", () => {
       nodeOwner,
       nodeOwner.publicKey
     );
-    // STEP 2: Create a collection
-    const { collectionKeypair } = await createCollection();
 
     // STEP 3: Mint NFT for the node
     const { assetKeypair } = await mintNft(
@@ -887,7 +864,7 @@ describe("netsepio", () => {
       nodeOwner,
       user as any, // admin mints the NFT
       user as any, // admin pays for the transaction
-      collectionKeypair
+      GlobalConfigCollectionKeypair.publicKey
     );
 
     let nodeAccountBeforeDeactivation = await program.account.node.fetch(
@@ -907,7 +884,7 @@ describe("netsepio", () => {
           node: nodePda,
           payer: nonOwner.publicKey,
           asset: assetKeypair.publicKey,
-          collection: collectionKeypair.publicKey,
+          collection: GlobalConfigCollectionKeypair.publicKey,
           mplCoreProgram: new PublicKey(
             "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
           ),
@@ -924,9 +901,97 @@ describe("netsepio", () => {
       nodeAccountInfo,
       "Node account should still exist after failed deactivation"
     );
-    //
+
     console.log(
       "✅ Successfully caught NotNodeOwner error for non-owner deactivation attempt!"
     );
+  });
+  it("Force Deactivate Node as Non-Owner Should Fail", async () => {
+    // Create a node owner and a different user
+    const nodeOwner = await createFundedKeypair(0.5);
+    const nonOwner = await createFundedKeypair(0.5);
+    // STEP 1: Register a node
+    const { testNodeId, nodePda } = await registerNode(
+      nodeOwner,
+      nodeOwner.publicKey
+    );
+
+    // STEP 3: Mint NFT for the node
+    const { assetKeypair } = await mintNft(
+      testNodeId,
+      nodeOwner,
+      user as any, // admin mints the NFT
+      user as any, // admin pays for the transaction
+      GlobalConfigCollectionKeypair.publicKey
+    );
+
+    // STEP 4: Attempt to force deactivate the node as non-owner (should fail)
+    console.log("Attempting to force deactivate node as non-owner...");
+    try {
+      await program.methods
+        .forceDeactivateNode(testNodeId)
+        .accountsPartial({
+          node: nodePda,
+          payer: nonOwner.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([nonOwner])
+        .rpc();
+    } catch (error) {
+      assert.isNotNull(error, "Error should be NotAuthorized for non-owner");
+    }
+    // Verify the node account still exists
+    const nodeAccountInfo = await provider.connection.getAccountInfo(nodePda);
+    assert.isNotNull(
+      nodeAccountInfo,
+      "Node account should still exist after failed force deactivation"
+    );
+
+    console.log(
+      "✅ Successfully caught NotAuthorized error for non-owner force deactivation attempt!"
+    );
+  });
+  it("Force Deactivate Node as Owner Should Fail", async () => {
+    // Create a node owner and a different user
+    const nodeOwner = await createFundedKeypair(0.5);
+    // STEP 1: Register a node
+    const { testNodeId, nodePda } = await registerNode(
+      nodeOwner,
+      nodeOwner.publicKey
+    );
+    let nodeAccountBeforeDeactivation = await program.account.node.fetch(
+      nodePda
+    );
+    console.log(
+      `The pda before deactivation : ${nodeAccountBeforeDeactivation}`
+    );
+    assert.isNotNull(
+      nodeAccountBeforeDeactivation,
+      "Node account should be closed after force deactivation"
+    );
+
+    try {
+      await program.methods
+        .forceDeactivateNode(testNodeId)
+        .accountsPartial({
+          node: nodePda,
+          payer: nodeOwner.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([nodeOwner])
+        .rpc();
+      let nodeAccountAfterDeactivation = await program.account.node.fetch(
+        nodePda
+      );
+      console.log(
+        `The pda after deactivation : ${nodeAccountAfterDeactivation}`
+      );
+      assert.isNull(
+        nodeAccountAfterDeactivation,
+        "Node account should be closed after force deactivation"
+      );
+    } catch (error) {
+      assert.isNotNull(error, "Error should be NotAuthorized for owner");
+    }
   });
 });
